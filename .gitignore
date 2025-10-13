@@ -1,0 +1,30 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.cache/
+/.vite
+/*.log
+.DS_Store
+.idea/
+.vscode/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+/node_modules/
+/.pnp
+/.pnp.js
+
+# Ignore uploads (project had uploads folder)
+front/uploads/
+back/uploads/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor directories and files
+/.history/
