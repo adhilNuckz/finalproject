@@ -149,7 +149,7 @@ export default function Terminal() {
     // === Cleanup ===
     return () => {
       socket.disconnect();
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", handleResize);              
       term.dispose();
     };
   }, []);

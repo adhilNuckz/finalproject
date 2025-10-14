@@ -180,10 +180,12 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const cors = require("cors");
 const fs = require("fs");
 const multer = require("multer");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 app.use(cors());
@@ -191,11 +193,37 @@ app.use(bodyParser.json());
 
 const upload = multer({ dest: "uploads/" });
 
+// Create HTTP server and Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+
+io.on('connection', (socket) => {
+  console.log('Socket connected', socket.id);
+});
+
 // Utility to run shell commands
 function runExec(cmd, res) {
   exec(cmd, (err, stdout, stderr) => {
     if (err) return res.status(500).json({ success: false, error: stderr });
     res.json({ success: true, output: stdout || "Done" });
+  });
+}
+
+// Stream execution and broadcast output via socket.io, then call callback on finish
+function runExecStream(cmd, meta = {}, callback) {
+  const child = spawn('bash', ['-lc', cmd], { env: process.env });
+  child.stdout.on('data', (chunk) => {
+    io.emit('site:action-output', { ...meta, type: 'stdout', chunk: chunk.toString() });
+  });
+  child.stderr.on('data', (chunk) => {
+    io.emit('site:action-output', { ...meta, type: 'stderr', chunk: chunk.toString() });
+  });
+  child.on('close', (code) => {
+    io.emit('site:action-output', { ...meta, type: 'close', code });
+    if (callback) callback(null, { code });
+  });
+  child.on('error', (err) => {
+    if (callback) callback(err);
   });
 }
 
@@ -254,9 +282,29 @@ app.post("/sites", (req, res) => {
       `;
     } else return res.status(400).json({ success: false, error: "Invalid action" });
 
-    exec(cmd, (err, stdout, stderr) => {
-      if (err) return res.json({ success: false, error: stderr });
-      res.json({ success: true, output: stdout || "Done" });
+    // Stream the command and emit live outputs via socket.io
+    runExecStream(cmd, { site, action }, (err, result) => {
+      if (err) return res.json({ success: false, error: err.message });
+      // After action completes, emit updated sites list
+      // small delay to allow filesystem changes to settle
+      setTimeout(() => {
+        try {
+          const availableSites = fs
+            .readdirSync('/etc/apache2/sites-available')
+            .filter((f) => f.endsWith('.conf'))
+            .map((f) => f.replace('.conf', ''));
+          const enabledSites = fs
+            .readdirSync('/etc/apache2/sites-enabled')
+            .filter((f) => f.endsWith('.conf'))
+            .map((f) => f.replace('.conf', ''));
+          const sites = availableSites.map((s) => ({ name: s, domain: `${s}.local`, status: enabledSites.includes(s) ? 'enabled' : 'disabled' }));
+          io.emit('sites:updated', sites);
+        } catch (e) {
+          console.warn('failed to emit sites update', e);
+        }
+      }, 500);
+
+      res.json({ success: true, output: `Command executed (exit ${result.code})` });
     });
   });
 });
@@ -284,6 +332,30 @@ app.get("/sites", (req, res) => {
     }));
 
     res.json({ success: true, sites });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Traverse multiple directories and return basic listing
+app.post('/list', (req, res) => {
+  const { dirs } = req.body;
+  if (!Array.isArray(dirs) || dirs.length === 0) return res.status(400).json({ success: false, error: 'dirs must be a non-empty array' });
+
+  try {
+    const result = {};
+    dirs.forEach((d) => {
+      try {
+        const entries = fs.readdirSync(d).map((name) => {
+          const stat = fs.statSync(require('path').join(d, name));
+          return { name, isDirectory: stat.isDirectory(), size: stat.size };
+        });
+        result[d] = { success: true, entries };
+      } catch (e) {
+        result[d] = { success: false, error: e.message };
+      }
+    });
+    res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
