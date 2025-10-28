@@ -266,17 +266,34 @@ app.post("/sites", (req, res) => {
 
     if (action === "enable") {
       if (isEnabled) return res.status(400).json({ success: false, error: `Site ${site} is already enabled` });
-      cmd = `sudo a2ensite ${site}.conf && sudo apache2ctl configtest && sudo systemctl reload apache2`;
+      // Restore from backup if exists (from maintenance mode)
+      cmd = `
+        if [ -f ${confFile}.bak ]; then 
+          sudo mv ${confFile}.bak ${confFile}; 
+        fi;
+        sudo a2ensite ${site}.conf && sudo apache2ctl configtest && sudo systemctl reload apache2
+      `;
     } else if (action === "disable") {
       if (!isEnabled) return res.status(400).json({ success: false, error: `Site ${site} is already disabled` });
-      cmd = `sudo a2dissite ${site}.conf && sudo apache2ctl configtest && sudo systemctl reload apache2`;
+      // Force reload to ensure Apache stops serving this site
+      cmd = `sudo a2dissite ${site}.conf && sudo apache2ctl configtest && sudo systemctl restart apache2`;
     } else if (action === "maintenance") {
       if (!isEnabled) return res.status(400).json({ success: false, error: `Cannot enable maintenance; site ${site} is disabled` });
+      // Create maintenance page if doesn't exist
       cmd = `
+        sudo mkdir -p /var/www/html/maintenance;
+        if [ ! -f /var/www/html/maintenance/index.html ]; then
+          echo '<!DOCTYPE html><html><head><title>Under Maintenance</title><style>body{font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f5f5f5}div{text-align:center;padding:40px;background:white;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#ff6b6b;margin:0 0 20px}p{color:#666}</style></head><body><div><h1>⚠️ Under Maintenance</h1><p>This site is temporarily unavailable. Please check back soon.</p></div></body></html>' | sudo tee /var/www/html/maintenance/index.html;
+        fi;
         if [ ! -f ${confFile}.bak ]; then sudo cp ${confFile} ${confFile}.bak; fi;
         echo '<VirtualHost *:80>
         ServerName ${site}.local
         DocumentRoot /var/www/html/maintenance
+        <Directory /var/www/html/maintenance>
+          Options -Indexes +FollowSymLinks
+          AllowOverride None
+          Require all granted
+        </Directory>
         </VirtualHost>' | sudo tee ${confFile};
         sudo apache2ctl configtest && sudo systemctl reload apache2
       `;
@@ -337,7 +354,21 @@ app.get("/sites", (req, res) => {
   }
 });
 
-// Traverse multiple directories and return basic listing
+const path = require('path');
+
+// Security: only allow operations under these roots
+const ALLOWED_ROOTS = ['/var/www/html'];
+
+function isAllowedPath(p) {
+  try {
+    const resolved = path.resolve(p);
+    return ALLOWED_ROOTS.some(root => resolved === root || resolved.startsWith(root + path.sep));
+  } catch (e) {
+    return false;
+  }
+}
+
+// Traverse multiple directories and return basic listing (includes modified time)
 app.post('/list', (req, res) => {
   const { dirs } = req.body;
   if (!Array.isArray(dirs) || dirs.length === 0) return res.status(400).json({ success: false, error: 'dirs must be a non-empty array' });
@@ -346,9 +377,11 @@ app.post('/list', (req, res) => {
     const result = {};
     dirs.forEach((d) => {
       try {
+        if (!isAllowedPath(d)) throw new Error('Path not allowed');
         const entries = fs.readdirSync(d).map((name) => {
-          const stat = fs.statSync(require('path').join(d, name));
-          return { name, isDirectory: stat.isDirectory(), size: stat.size };
+          const full = path.join(d, name);
+          const stat = fs.statSync(full);
+          return { name, path: full, isDirectory: stat.isDirectory(), size: stat.size, modified: stat.mtimeMs };
         });
         result[d] = { success: true, entries };
       } catch (e) {
@@ -358,6 +391,71 @@ app.post('/list', (req, res) => {
     res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Read file content
+app.post('/files/read', (req, res) => {
+  const { path: filePath } = req.body;
+  if (!filePath) return res.status(400).json({ success: false, error: 'path required' });
+  if (!isAllowedPath(filePath)) return res.status(403).json({ success: false, error: 'path not allowed' });
+  try {
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) return res.status(400).json({ success: false, error: 'path is a directory' });
+    const content = fs.readFileSync(filePath, 'utf8');
+    res.json({ success: true, content, size: stat.size, modified: stat.mtimeMs });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Write file content
+app.post('/files/write', (req, res) => {
+  const { path: filePath, content } = req.body;
+  if (!filePath) return res.status(400).json({ success: false, error: 'path required' });
+  if (!isAllowedPath(filePath)) return res.status(403).json({ success: false, error: 'path not allowed' });
+  try {
+    fs.writeFileSync(filePath, content || '', 'utf8');
+    const stat = fs.statSync(filePath);
+    res.json({ success: true, size: stat.size, modified: stat.mtimeMs });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Create file or directory
+app.post('/files/create', (req, res) => {
+  const { path: targetPath, isDirectory } = req.body;
+  if (!targetPath) return res.status(400).json({ success: false, error: 'path required' });
+  if (!isAllowedPath(targetPath)) return res.status(403).json({ success: false, error: 'path not allowed' });
+  try {
+    if (isDirectory) {
+      fs.mkdirSync(targetPath, { recursive: true });
+      return res.json({ success: true });
+    } else {
+      fs.writeFileSync(targetPath, '', 'utf8');
+      return res.json({ success: true });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Delete file or directory
+app.post('/files/delete', (req, res) => {
+  const { path: targetPath } = req.body;
+  if (!targetPath) return res.status(400).json({ success: false, error: 'path required' });
+  if (!isAllowedPath(targetPath)) return res.status(403).json({ success: false, error: 'path not allowed' });
+  try {
+    const stat = fs.statSync(targetPath);
+    if (stat.isDirectory()) {
+      fs.rmSync(targetPath, { recursive: true, force: true });
+    } else {
+      fs.unlinkSync(targetPath);
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 

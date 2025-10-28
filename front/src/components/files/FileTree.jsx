@@ -1,9 +1,9 @@
 import React from 'react';
 import { FolderOpen, Folder, FileText, Code, Image, Settings, ChevronRight, ChevronDown } from 'lucide-react';
 
-export default function FileTree({ files, selectedFile, expandedFolders, onFileSelect, onToggleFolder }) {
+export default function FileTree({ files, selectedFile, onFileSelect, onFolderNavigate }) {
   const getFileIcon = (file) => {
-    if (file.type === 'folder') return expandedFolders.has(file.id) ? <FolderOpen className="w-4 h-4 text-blue-500" /> : <Folder className="w-4 h-4 text-blue-500" />;
+    if (file.type === 'folder') return <Folder className="w-4 h-4 text-blue-500" />;
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'html': case 'htm': case 'xml': return <Code className="w-4 h-4 text-orange-500" />;
@@ -19,12 +19,11 @@ export default function FileTree({ files, selectedFile, expandedFolders, onFileS
   const formatFileSize = (bytes) => { if (!bytes) return ''; const sizes = ['B', 'KB', 'MB', 'GB']; const i = Math.floor(Math.log(bytes) / Math.log(1024)); return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`; };
 
   const renderFileItem = (file, depth = 0) => {
-    const isExpanded = expandedFolders.has(file.id);
     const isSelected = selectedFile?.id === file.id;
     return (
       <div key={file.id}>
-        <div className={`flex items-center px-3 py-2 text-sm cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-r-2 border-blue-500' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`} style={{ paddingLeft: `${12 + depth * 20}px` }} onClick={() => { if (file.type === 'folder') { onToggleFolder(file.id); } else { onFileSelect(file); } }}>
-          {file.type === 'folder' && <div className="mr-1">{isExpanded ? <ChevronDown className="w-3 h-3 text-gray-400" /> : <ChevronRight className="w-3 h-3 text-gray-400" />}</div>}
+        <div className={`flex items-center px-3 py-2 text-sm cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-r-2 border-blue-500' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`} style={{ paddingLeft: `${12 + depth * 20}px` }} onClick={() => { if (file.type === 'folder') { onFolderNavigate(file.path); } else { onFileSelect(file); } }}>
+          {file.type === 'folder' && <div className="mr-1"><ChevronRight className="w-3 h-3 text-gray-400" /></div>}
           <div className="mr-2">{getFileIcon(file)}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
@@ -34,7 +33,6 @@ export default function FileTree({ files, selectedFile, expandedFolders, onFileS
             <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(file.modified).toLocaleDateString()}</div>
           </div>
         </div>
-        {file.type === 'folder' && isExpanded && file.children && <div>{file.children.map(child => renderFileItem(child, depth + 1))}</div>}
       </div>
     );
   };

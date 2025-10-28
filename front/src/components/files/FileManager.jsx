@@ -1,36 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileTree from './FileTree.jsx';
 import FileEditor from './FileEditor.jsx';
 import FileToolbar from './FileToolbar.jsx';
 
-export default function FileManager() {
-  const mockFileStructure = [ /* mock structure omitted for brevity */ ];
-  const [fileStructure, setFileStructure] = useState(mockFileStructure);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [expandedFolders, setExpandedFolders] = useState(new Set(['1', '2', '3']));
+const API_BASE = 'http://localhost:5000';
 
-  const handleFileSelect = (file) => { if (file.type === 'file') setSelectedFile(file); };
-  const handleFileUpdate = (updatedFile) => {
-    const updateFileInStructure = (items) => items.map(item => {
-      if (item.id === updatedFile.id) return updatedFile;
-      if (item.children) return { ...item, children: updateFileInStructure(item.children) };
-      return item;
-    });
-    setFileStructure(updateFileInStructure(fileStructure));
-    setSelectedFile(updatedFile);
+function mapEntriesToTree(entries, parentPath) {
+  return entries.map((e, idx) => ({
+    id: `${parentPath}:${e.name}:${idx}`,
+    name: e.name,
+    type: e.isDirectory ? 'folder' : 'file',
+    size: e.size,
+    modified: e.modified || Date.now(),
+    path: parentPath ? `${parentPath}/${e.name}` : e.name
+  }));
+}
+
+export default function FileManager() {
+  const [fileStructure, setFileStructure] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [currentPath, setCurrentPath] = useState('/var/www/html');
+  const [pathInput, setPathInput] = useState('/var/www/html');
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => { fetchList(currentPath); }, [currentPath]);
+
+  const fetchList = async (dirPath) => {
+    try {
+      const res = await fetch(`${API_BASE}/list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dirs: [dirPath] }) });
+      const data = await res.json();
+      if (data.success) {
+        const root = data.result[dirPath];
+        if (root && root.success) {
+          const tree = mapEntriesToTree(root.entries, dirPath);
+          setFileStructure(tree);
+          setPathInput(dirPath);
+        } else {
+          setFileStructure([]);
+        }
+      }
+    } catch (e) { console.error('Failed to load file list', e); setFileStructure([]); }
   };
-  const toggleFolder = (folderId) => { const newExpanded = new Set(expandedFolders); newExpanded.has(folderId) ? newExpanded.delete(folderId) : newExpanded.add(folderId); setExpandedFolders(newExpanded); };
+
+  const handleFileSelect = async (file) => {
+    if (file.type === 'file') {
+      // read file content from server
+      try {
+        const res = await fetch(`${API_BASE}/files/read`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: file.path }) });
+        const data = await res.json();
+        if (data.success) {
+          setSelectedFile({ ...file, content: data.content, size: data.size, modified: data.modified });
+        } else {
+          alert('Failed to read file: ' + (data.error || 'unknown'));
+        }
+      } catch (e) { console.error('Read failed', e); }
+    } else if (file.type === 'folder') {
+      // navigate into folder (update currentPath & history)
+      setHistory(prev => [...prev, currentPath]);
+      setCurrentPath(file.path);
+    }
+  };
+
+  const handleFileUpdate = async (updatedFile) => {
+    // write back to server
+    try {
+      const res = await fetch(`${API_BASE}/files/write`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: updatedFile.path, content: updatedFile.content }) });
+      const data = await res.json();
+      if (data.success) {
+        // update selected file
+        setSelectedFile({ ...updatedFile, size: data.size, modified: data.modified });
+      } else {
+        alert('Save failed: ' + (data.error || 'unknown'));
+      }
+    } catch (e) { console.error('Save failed', e); }
+  };
+
+  const goToPath = (p) => {
+    if (!p) return;
+    // naive guard: ensure under allowed root
+    if (!p.startsWith('/var/www/html')) { alert('Only paths under /var/www/html are allowed'); return; }
+    setHistory(prev => [...prev, currentPath]);
+    setCurrentPath(p);
+  };
+
+  const navigateUp = () => {
+    if (!currentPath || currentPath === '/var/www/html') return;
+    const parts = currentPath.split('/').filter(Boolean);
+    parts.pop();
+    const up = '/' + parts.join('/');
+    if (!up) return setCurrentPath('/var/www/html');
+    setHistory(prev => [...prev, currentPath]);
+    setCurrentPath(up);
+  };
+
+  const pathParts = currentPath.split('/').filter(Boolean);
+  const breadcrumbs = ['/', ...pathParts.map((p, i) => ({ name: p, path: '/' + pathParts.slice(0, i + 1).join('/') }))];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">File Manager</h1>
-        <FileToolbar selectedFile={selectedFile} />
+        <FileToolbar selectedFile={selectedFile} currentPath={currentPath} />
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            {breadcrumbs.map((b, i) => (
+              <button key={i} onClick={() => goToPath(b.path)} className="text-xs text-gray-600 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">{b.name}</button>
+            ))}
+          </div>
+          <div className="flex-1" />
+          <div className="flex items-center space-x-2">
+            <button onClick={navigateUp} className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-900 rounded">Up</button>
+            <input value={pathInput} onChange={(e) => setPathInput(e.target.value)} className="text-sm px-2 py-1 rounded border dark:bg-gray-900" />
+            <button onClick={() => goToPath(pathInput)} className="text-sm px-2 py-1 bg-blue-600 text-white rounded">Go</button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
           <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700">
-            <FileTree files={fileStructure} selectedFile={selectedFile} expandedFolders={expandedFolders} onFileSelect={handleFileSelect} onToggleFolder={toggleFolder} />
+            <FileTree files={fileStructure} selectedFile={selectedFile} onFileSelect={handleFileSelect} onFolderNavigate={(p) => goToPath(p)} />
           </div>
           <div className="lg:col-span-2">
             <FileEditor file={selectedFile} onFileUpdate={handleFileUpdate} />
