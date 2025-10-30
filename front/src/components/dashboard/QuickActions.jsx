@@ -5,8 +5,6 @@ const actions = [
   { title: 'Add New Site', description: 'Create a new website or subdomain', icon: Plus, color: 'bg-blue-500 hover:bg-blue-600' },
   { title: 'Restart Services', description: 'Restart Apache/Nginx services', icon: RefreshCw, color: 'bg-green-500 hover:bg-green-600' },
   { title: 'Security Scan', description: 'Run security vulnerability check', icon: Shield, color: 'bg-purple-500 hover:bg-purple-600' },
-  { title: 'Database Backup', description: 'Create database backup now', icon: Database, color: 'bg-orange-500 hover:bg-orange-600' },
-  { title: 'System Settings', description: 'Configure server settings', icon: Settings, color: 'bg-gray-500 hover:bg-gray-600' },
   { title: 'Monitor Logs', description: 'View real-time system logs', icon: Monitor, color: 'bg-red-500 hover:bg-red-600' },
 ];
 

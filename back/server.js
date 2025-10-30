@@ -355,9 +355,14 @@ app.get("/sites", (req, res) => {
 });
 
 const path = require('path');
+const os = require('os');
 
 // Security: only allow operations under these roots
-const ALLOWED_ROOTS = ['/var/www/html'];
+const ALLOWED_ROOTS = [
+  '/var/www/html',
+  os.homedir(), // User's home directory
+  '/home' // Allow access to all home directories
+];
 
 function isAllowedPath(p) {
   try {
@@ -501,5 +506,183 @@ app.post("/site/add", upload.array("files"), (req, res) => {
 });
 
 
-// Start server
-app.listen(5000, () => console.log("Backend running on http://localhost:5000"));
+// -------------------- Domain Management Routes --------------------
+
+const DOMAINS_FILE = path.join(__dirname, 'domains.json');
+
+// Helper to read domains
+function readDomains() {
+  try {
+    if (!fs.existsSync(DOMAINS_FILE)) {
+      fs.writeFileSync(DOMAINS_FILE, JSON.stringify([]));
+      return [];
+    }
+    const data = fs.readFileSync(DOMAINS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Error reading domains:', e);
+    return [];
+  }
+}
+
+// Helper to write domains
+function writeDomains(domains) {
+  try {
+    fs.writeFileSync(DOMAINS_FILE, JSON.stringify(domains, null, 2));
+    return true;
+  } catch (e) {
+    console.error('Error writing domains:', e);
+    return false;
+  }
+}
+
+// GET all domains
+app.get('/domains', (req, res) => {
+  const domains = readDomains();
+  res.json({ success: true, domains });
+});
+
+// POST add new domain
+app.post('/domains', (req, res) => {
+  const { domain, status = 'active' } = req.body;
+  
+  if (!domain) {
+    return res.status(400).json({ success: false, error: 'Domain name is required' });
+  }
+  
+  const domains = readDomains();
+  
+  // Check if domain already exists
+  const exists = domains.find(d => d.domain === domain);
+  if (exists) {
+    return res.status(400).json({ success: false, error: 'Domain already exists' });
+  }
+  
+  const newDomain = {
+    id: Date.now().toString(),
+    domain,
+    status,
+    addedAt: new Date().toISOString()
+  };
+  
+  domains.push(newDomain);
+  
+  if (writeDomains(domains)) {
+    io.emit('domains:updated', domains);
+    res.json({ success: true, domain: newDomain });
+  } else {
+    res.status(500).json({ success: false, error: 'Failed to save domain' });
+  }
+});
+
+// DELETE domain
+app.delete('/domains/:domain', (req, res) => {
+  const { domain } = req.params;
+  
+  const domains = readDomains();
+  const filtered = domains.filter(d => d.domain !== domain);
+  
+  if (domains.length === filtered.length) {
+    return res.status(404).json({ success: false, error: 'Domain not found' });
+  }
+  
+  if (writeDomains(filtered)) {
+    io.emit('domains:updated', filtered);
+    res.json({ success: true, message: 'Domain deleted' });
+  } else {
+    res.status(500).json({ success: false, error: 'Failed to delete domain' });
+  }
+});
+
+// GET server IP address
+app.get('/server/ip', (req, res) => {
+  exec('hostname -I', (err, stdout, stderr) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: 'Failed to get IP address' });
+    }
+    const ips = stdout.trim().split(' ').filter(ip => ip);
+    res.json({ success: true, ip: ips[0] || 'localhost', allIps: ips });
+  });
+});
+
+// GET server paths (home directory, allowed roots)
+app.get('/server/paths', (req, res) => {
+  res.json({
+    success: true,
+    homeDir: os.homedir(),
+    allowedRoots: ALLOWED_ROOTS,
+    username: os.userInfo().username
+  });
+});
+
+// -------------------- PM2 Management Routes --------------------
+
+// GET all PM2 processes
+app.get('/pm2/list', (req, res) => {
+  exec('pm2 jlist', (err, stdout, stderr) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: 'Failed to get PM2 list. Make sure PM2 is installed.' });
+    }
+    try {
+      const processes = JSON.parse(stdout);
+      res.json({ success: true, processes });
+    } catch (e) {
+      res.status(500).json({ success: false, error: 'Failed to parse PM2 output' });
+    }
+  });
+});
+
+// POST control PM2 process (restart, stop, reload, delete)
+app.post('/pm2/control', (req, res) => {
+  const { action, processId } = req.body;
+  
+  if (!action || processId === undefined || processId === null) {
+    return res.status(400).json({ success: false, error: 'Missing action or processId' });
+  }
+  
+  const allowedActions = ['restart', 'stop', 'reload', 'delete'];
+  if (!allowedActions.includes(action)) {
+    return res.status(400).json({ success: false, error: 'Invalid action' });
+  }
+  
+  const cmd = `pm2 ${action} ${processId}`;
+  
+  runExecStream(cmd, { action, processId }, (err, result) => {
+    if (err) {
+      return res.json({ success: false, error: err.message });
+    }
+    
+    // Emit updated PM2 list after action
+    setTimeout(() => {
+      exec('pm2 jlist', (err, stdout) => {
+        if (!err) {
+          try {
+            const processes = JSON.parse(stdout);
+            io.emit('pm2:updated', processes);
+          } catch (e) {
+            console.warn('Failed to emit PM2 update', e);
+          }
+        }
+      });
+    }, 500);
+    
+    res.json({ success: true, message: `Process ${action}ed successfully` });
+  });
+});
+
+// POST start new PM2 process
+app.post('/pm2/start', (req, res) => {
+  const { name, script, cwd } = req.body;
+  
+  if (!name || !script) {
+    return res.status(400).json({ success: false, error: 'Missing name or script' });
+  }
+  
+  const cwdParam = cwd ? `--cwd ${cwd}` : '';
+  const cmd = `pm2 start ${script} --name ${name} ${cwdParam}`;
+  
+  runExec(cmd, res);
+});
+
+// Start server with Socket.IO
+server.listen(5000, () => console.log("Backend running on http://localhost:5000 with Socket.IO"));

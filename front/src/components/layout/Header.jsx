@@ -1,11 +1,15 @@
 import React from 'react';
-import { Sun, Moon, LogOut, User } from 'lucide-react';
+import { Sun, Moon, LogOut, User, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -17,6 +21,15 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover:rotate-180 transition-transform duration-500"
+            aria-label="Refresh page"
+            title="Refresh"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
+
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

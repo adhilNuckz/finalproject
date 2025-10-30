@@ -6,6 +6,7 @@ import Layout from './components/layout/Layout.jsx';
 import Dashboard from './components/dashboard/Dashboard.jsx';
 import Sites from './components/sites/Sites.jsx';
 import FileManager from './components/files/FileManager.jsx';
+import PM2Manager from './components/pm2/PM2Manager.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import AIInsights from './components/ai/AIInsights.jsx';
 
@@ -21,6 +22,8 @@ function AppContent() {
         return <Sites />;
       case 'files':
         return <FileManager />;
+      case 'pm2':
+        return <PM2Manager />;
       case 'terminal':
         return <Terminal />;
       case 'ai-insights':

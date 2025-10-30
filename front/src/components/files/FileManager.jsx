@@ -22,8 +22,26 @@ export default function FileManager() {
   const [currentPath, setCurrentPath] = useState('/var/www/html');
   const [pathInput, setPathInput] = useState('/var/www/html');
   const [history, setHistory] = useState([]);
+  const [allowedRoots, setAllowedRoots] = useState(['/var/www/html']);
+  const [homeDir, setHomeDir] = useState(null);
 
-  useEffect(() => { fetchList(currentPath); }, [currentPath]);
+  useEffect(() => {
+    fetchServerPaths();
+    fetchList(currentPath);
+  }, [currentPath]);
+
+  const fetchServerPaths = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/server/paths`);
+      const data = await res.json();
+      if (data.success) {
+        setAllowedRoots(data.allowedRoots);
+        setHomeDir(data.homeDir);
+      }
+    } catch (e) {
+      console.error('Failed to fetch server paths', e);
+    }
+  };
 
   const fetchList = async (dirPath) => {
     try {
@@ -75,22 +93,36 @@ export default function FileManager() {
     } catch (e) { console.error('Save failed', e); }
   };
 
+  const isPathAllowed = (p) => {
+    return allowedRoots.some(root => p === root || p.startsWith(root + '/'));
+  };
+
   const goToPath = (p) => {
     if (!p) return;
-    // naive guard: ensure under allowed root
-    if (!p.startsWith('/var/www/html')) { alert('Only paths under /var/www/html are allowed'); return; }
+    // Check if path is under any allowed root
+    if (!isPathAllowed(p)) {
+      alert(`Path must be under one of: ${allowedRoots.join(', ')}`);
+      return;
+    }
     setHistory(prev => [...prev, currentPath]);
     setCurrentPath(p);
   };
 
   const navigateUp = () => {
-    if (!currentPath || currentPath === '/var/www/html') return;
     const parts = currentPath.split('/').filter(Boolean);
+    if (parts.length === 0) return; // Already at root
     parts.pop();
-    const up = '/' + parts.join('/');
-    if (!up) return setCurrentPath('/var/www/html');
+    const up = parts.length > 0 ? '/' + parts.join('/') : '/';
+    if (!isPathAllowed(up)) return; // Don't go above allowed roots
     setHistory(prev => [...prev, currentPath]);
     setCurrentPath(up);
+  };
+
+  const goToHome = () => {
+    if (homeDir && isPathAllowed(homeDir)) {
+      setHistory(prev => [...prev, currentPath]);
+      setCurrentPath(homeDir);
+    }
   };
 
   const pathParts = currentPath.split('/').filter(Boolean);
@@ -103,17 +135,28 @@ export default function FileManager() {
         <FileToolbar selectedFile={selectedFile} currentPath={currentPath} />
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2">
-          <div className="flex items-center space-x-1">
-            {breadcrumbs.map((b, i) => (
-              <button key={i} onClick={() => goToPath(b.path)} className="text-xs text-gray-600 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">{b.name}</button>
-            ))}
-          </div>
-          <div className="flex-1" />
+        <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
           <div className="flex items-center space-x-2">
-            <button onClick={navigateUp} className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-900 rounded">Up</button>
-            <input value={pathInput} onChange={(e) => setPathInput(e.target.value)} className="text-sm px-2 py-1 rounded border dark:bg-gray-900" />
-            <button onClick={() => goToPath(pathInput)} className="text-sm px-2 py-1 bg-blue-600 text-white rounded">Go</button>
+            <div className="flex items-center space-x-1">
+              <button onClick={() => goToPath('/var/www/html')} className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">Web Root</button>
+              {homeDir && (
+                <button onClick={goToHome} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50">Home</button>
+              )}
+            </div>
+            <div className="flex-1" />
+            <div className="flex items-center space-x-2">
+              <button onClick={navigateUp} className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-900 rounded hover:bg-gray-200 dark:hover:bg-gray-800">↑ Up</button>
+              <input value={pathInput} onChange={(e) => setPathInput(e.target.value)} className="text-sm px-2 py-1 rounded border dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+              <button onClick={() => goToPath(pathInput)} className="text-sm px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">Go</button>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1 overflow-x-auto">
+            {breadcrumbs.map((b, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span className="text-gray-400">/</span>}
+                <button onClick={() => goToPath(b.path)} className="text-xs text-gray-600 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">{b.name || 'root'}</button>
+              </React.Fragment>
+            ))}
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
