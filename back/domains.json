@@ -10,5 +10,11 @@
     "domain": "new.com",
     "status": "active",
     "addedAt": "2025-10-30T16:49:06.794Z"
+  },
+  {
+    "id": "1761853706020",
+    "domain": "uranium.com",
+    "status": "active",
+    "addedAt": "2025-10-30T19:48:26.020Z"
   }
 ]

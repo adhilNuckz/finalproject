@@ -128,11 +128,110 @@ export default function FileManager() {
   const pathParts = currentPath.split('/').filter(Boolean);
   const breadcrumbs = ['/', ...pathParts.map((p, i) => ({ name: p, path: '/' + pathParts.slice(0, i + 1).join('/') }))];
 
+  const handleUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    const formData = new FormData();
+    formData.append('targetPath', currentPath);
+    Array.from(files).forEach(file => formData.append('files', file));
+
+    try {
+      const res = await fetch(`${API_BASE}/files/upload`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        alert(`${data.files.length} file(s) uploaded successfully!`);
+        fetchList(currentPath);
+      } else {
+        alert('Upload failed: ' + (data.error || 'unknown'));
+      }
+    } catch (e) {
+      console.error('Upload failed', e);
+      alert('Upload failed: ' + e.message);
+    }
+  };
+
+  const handleNewFolder = async () => {
+    const folderName = prompt('Enter folder name:');
+    if (!folderName) return;
+    const newPath = `${currentPath}/${folderName}`;
+    try {
+      const res = await fetch(`${API_BASE}/files/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: newPath, isDirectory: true }) });
+      const data = await res.json();
+      if (data.success) {
+        fetchList(currentPath);
+      } else {
+        alert('Failed to create folder: ' + (data.error || 'unknown'));
+      }
+    } catch (e) {
+      console.error('Create folder failed', e);
+      alert('Failed to create folder: ' + e.message);
+    }
+  };
+
+  const handleNewFile = async () => {
+    const fileName = prompt('Enter file name:');
+    if (!fileName) return;
+    const newPath = `${currentPath}/${fileName}`;
+    try {
+      const res = await fetch(`${API_BASE}/files/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: newPath, isDirectory: false }) });
+      const data = await res.json();
+      if (data.success) {
+        fetchList(currentPath);
+      } else {
+        alert('Failed to create file: ' + (data.error || 'unknown'));
+      }
+    } catch (e) {
+      console.error('Create file failed', e);
+      alert('Failed to create file: ' + e.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedFile) return;
+    if (!confirm(`Delete ${selectedFile.name}?`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/files/delete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: selectedFile.path }) });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedFile(null);
+        fetchList(currentPath);
+      } else {
+        alert('Failed to delete: ' + (data.error || 'unknown'));
+      }
+    } catch (e) {
+      console.error('Delete failed', e);
+      alert('Failed to delete: ' + e.message);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!selectedFile || selectedFile.type === 'folder') return;
+    const blob = new Blob([selectedFile.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = selectedFile.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRefresh = () => {
+    fetchList(currentPath);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">File Manager</h1>
-        <FileToolbar selectedFile={selectedFile} currentPath={currentPath} />
+        <FileToolbar 
+          selectedFile={selectedFile} 
+          currentPath={currentPath}
+          onUpload={handleUpload}
+          onNewFolder={handleNewFolder}
+          onNewFile={handleNewFile}
+          onDelete={handleDelete}
+          onDownload={handleDownload}
+          onRefresh={handleRefresh}
+        />
       </div>
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
@@ -160,10 +259,10 @@ export default function FileManager() {
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
-          <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700">
+          <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
             <FileTree files={fileStructure} selectedFile={selectedFile} onFileSelect={handleFileSelect} onFolderNavigate={(p) => goToPath(p)} />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 overflow-hidden">
             <FileEditor file={selectedFile} onFileUpdate={handleFileUpdate} />
           </div>
         </div>

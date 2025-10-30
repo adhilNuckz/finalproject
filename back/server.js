@@ -464,6 +464,38 @@ app.post('/files/delete', (req, res) => {
   }
 });
 
+// Upload files to a directory
+app.post('/files/upload', upload.array('files'), (req, res) => {
+  const { targetPath } = req.body;
+  const files = req.files;
+
+  if (!targetPath) return res.status(400).json({ success: false, error: 'targetPath required' });
+  if (!files || files.length === 0) return res.status(400).json({ success: false, error: 'No files uploaded' });
+  if (!isAllowedPath(targetPath)) return res.status(403).json({ success: false, error: 'path not allowed' });
+
+  try {
+    // Ensure target directory exists
+    if (!fs.existsSync(targetPath)) {
+      fs.mkdirSync(targetPath, { recursive: true });
+    }
+
+    const uploadedFiles = [];
+    for (const file of files) {
+      const destPath = path.join(targetPath, file.originalname);
+      fs.renameSync(file.path, destPath);
+      uploadedFiles.push({
+        name: file.originalname,
+        path: destPath,
+        size: file.size
+      });
+    }
+
+    res.json({ success: true, files: uploadedFiles });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Add new site
 app.post("/site/add", upload.array("files"), (req, res) => {
   const { subdomain, folder, mainFile } = req.body; // get mainFile
