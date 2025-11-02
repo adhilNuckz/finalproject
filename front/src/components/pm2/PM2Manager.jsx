@@ -304,7 +304,7 @@ export default function PM2Manager() {
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">CPU</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Memory</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Uptime</th>
+                  {/* <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Uptime</th> */}
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Restarts</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                 </tr>
@@ -342,9 +342,9 @@ export default function PM2Manager() {
                     <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
                       {formatMemory(proc.monit?.memory)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    {/* <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
                       {formatUptime(proc.pm2_env?.pm_uptime)}
-                    </td>
+                    </td> */}
                     <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
                       {proc.pm2_env?.restart_time || 0}
                     </td>
