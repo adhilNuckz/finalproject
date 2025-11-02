@@ -7,6 +7,7 @@ import Dashboard from './components/dashboard/Dashboard.jsx';
 import Sites from './components/sites/Sites.jsx';
 import FileManager from './components/files/FileManager.jsx';
 import PM2Manager from './components/pm2/PM2Manager.jsx';
+import ApacheConfig from './components/apache/ApacheConfig.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import AIInsights from './components/ai/AIInsights.jsx';
 
@@ -24,6 +25,8 @@ function AppContent() {
         return <FileManager />;
       case 'pm2':
         return <PM2Manager />;
+      case 'apache-config':
+        return <ApacheConfig />;
       case 'terminal':
         return <Terminal />;
       case 'ai-insights':

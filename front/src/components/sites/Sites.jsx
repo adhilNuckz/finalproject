@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import SitesList from './SitesList.jsx';
 import SiteDetails from './SiteDetails.jsx';
+import AddSiteModal from './AddSiteModal.jsx';
 import { Plus } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000';
@@ -129,113 +130,15 @@ export default function Sites() {
 
       {/* Add Site Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-semibold mb-4">Create New Site</h3>
-            <AddSiteForm onCancel={() => setShowAddModal(false)} onCreated={async () => { setShowAddModal(false); await fetchSites(); }} />
-          </div>
-        </div>
+        <AddSiteModal 
+          onClose={() => setShowAddModal(false)} 
+          onCreated={async () => { 
+            setShowAddModal(false); 
+            await fetchSites(); 
+          }} 
+          isServerInterface={false}
+        />
       )}
     </div>
-  );
-}
-
-function AddSiteForm({ onCancel, onCreated }) {
-  const [subdomain, setSubdomain] = React.useState('');
-  const [folder, setFolder] = React.useState('');
-  const [mainFile, setMainFile] = React.useState('index.html');
-  const [saving, setSaving] = React.useState(false);
-  const [files, setFiles] = React.useState([]);
-  const [domainExt, setDomainExt] = React.useState('.local');
-
-  const onFileChange = (e) => {
-    const selected = Array.from(e.target.files || []);
-    setFiles(selected);
-    if (selected.length > 0) setMainFile(selected[0].name);
-  };
-
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!subdomain || !folder || !mainFile) return;
-    setSaving(true);
-    try {
-      // If files were provided, send multipart to /site/add
-      if (files && files.length > 0) {
-        const fd = new FormData();
-        fd.append('subdomain', subdomain + domainExt.replace(/^\./, ''));
-        fd.append('folder', folder);
-        fd.append('mainFile', mainFile);
-        files.forEach((f) => fd.append('files', f));
-
-        const res = await fetch(`${API_BASE}/site/add`, { method: 'POST', body: fd });
-        const data = await res.json();
-        if (!data.success) {
-          alert('Failed to create site: ' + (data.error || 'unknown'));
-        } else {
-          await onCreated();
-        }
-      } else {
-        // fallback: use json create endpoint
-        const res = await fetch(`${API_BASE}/site/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subdomain: subdomain + domainExt.replace(/^\./, ''), folder, mainFile }) });
-        const data = await res.json();
-        if (!data.success) {
-          alert('Failed to create site: ' + (data.error || 'unknown'));
-        } else {
-          await onCreated();
-        }
-      }
-    } catch (err) {
-      console.error('Create site failed', err);
-      alert('Create site failed: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Domain extension</label>
-        <select value={domainExt} onChange={(e) => setDomainExt(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 p-2">
-          <option value=".local">.local</option>
-          <option value=".test">.test</option>
-          <option value=".localhost">.localhost</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Subdomain</label>
-        <input value={subdomain} onChange={(e) => setSubdomain(e.target.value)} placeholder="example" className="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 p-2" />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Folder</label>
-        <input value={folder} onChange={(e) => setFolder(e.target.value)} placeholder="example-folder" className="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 p-2" />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Upload files</label>
-        <input type="file" multiple onChange={onFileChange} className="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 p-2" />
-        {files.length > 0 && (
-          <div className="mt-2">
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Files selected:</div>
-            <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300">
-              {files.map((f, idx) => (<li key={idx}>{f.name}</li>))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Main file (select from uploaded files)</label>
-        <select value={mainFile} onChange={(e) => setMainFile(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 dark:bg-gray-700 p-2">
-          {files.length === 0 ? (<option value="index.html">index.html</option>) : files.map((f) => (<option key={f.name} value={f.name}>{f.name}</option>))}
-        </select>
-      </div>
-      <div className="flex justify-end space-x-2">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700">Cancel</button>
-        <button type="submit" disabled={saving} className="px-4 py-2 rounded-md bg-blue-600 text-white">{saving ? 'Creating…' : 'Create Site'}</button>
-      </div>
-    </form>
   );
 }

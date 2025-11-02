@@ -3,10 +3,12 @@ import ServerStats from './ServerStats.jsx';
 import DomainsOverview from './DomainsOverview.jsx';
 import QuickActions from './QuickActions.jsx';
 import SystemAlerts from './SystemAlerts.jsx';
+import AddSiteModal from '../sites/AddSiteModal.jsx';
 import { Server } from 'lucide-react';
 
 export default function Dashboard() {
   const [serverIp, setServerIp] = useState('Loading...');
+  const [showAddSiteModal, setShowAddSiteModal] = useState(false);
 
   useEffect(() => {
     fetchServerIp();
@@ -63,9 +65,21 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <QuickActions />
+        <QuickActions onAddSite={() => setShowAddSiteModal(true)} />
         <SystemAlerts />
       </div>
+
+      {/* Add Site Modal */}
+      {showAddSiteModal && (
+        <AddSiteModal
+          onClose={() => setShowAddSiteModal(false)}
+          onCreated={() => {
+            setShowAddSiteModal(false);
+            // Optionally refresh dashboard data here
+          }}
+          isServerInterface={false}
+        />
+      )}
     </div>
   );
 }
