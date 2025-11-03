@@ -15,7 +15,13 @@ router.get('/ip', (req, res) => {
 router.get('/paths', (req, res) => {
   const os = require('os');
   const ALLOWED_ROOTS = ['/var/www/html', os.homedir(), '/home'];
-  res.json({ success: true, paths: ALLOWED_ROOTS });
+  res.json({ 
+    success: true, 
+    paths: ALLOWED_ROOTS,
+    allowedRoots: ALLOWED_ROOTS,
+    homeDir: os.homedir(),
+    username: os.userInfo().username
+  });
 });
 
 // Run allowed commands

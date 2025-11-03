@@ -94,6 +94,7 @@ export default function FileManager() {
   };
 
   const isPathAllowed = (p) => {
+    if (!allowedRoots || allowedRoots.length === 0) return true; // Allow if not loaded yet
     return allowedRoots.some(root => p === root || p.startsWith(root + '/'));
   };
 

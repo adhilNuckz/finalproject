@@ -3,10 +3,10 @@ import { LayoutDashboard, Globe, FolderOpen, Terminal, Brain, Server, Activity, 
 
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+  { id: 'apache-config', name: 'Apache Config', icon: Settings },
   { id: 'sites', name: 'Sites', icon: Globe },
   { id: 'files', name: 'Files', icon: FolderOpen },
-  { id: 'pm2', name: 'PM2 Manager', icon: Activity },
-  { id: 'apache-config', name: 'Apache Config', icon: Settings },
+  { id: 'pm2', name: 'PM2 Manager', icon: Activity },  
   { id: 'terminal', name: 'Terminal', icon: Terminal },
   { id: 'ai-insights', name: 'AI Insights', icon: Brain },
 ];

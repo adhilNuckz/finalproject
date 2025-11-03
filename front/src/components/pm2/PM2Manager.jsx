@@ -15,7 +15,7 @@ export default function PM2Manager() {
   const [addError, setAddError] = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const [showDirectoryBrowser, setShowDirectoryBrowser] = useState(false);
-  const [currentPath, setCurrentPath] = useState(null);
+  const [currentPath, setCurrentPath] = useState('/home/kali');
   const [directoryContents, setDirectoryContents] = useState([]);
   const [directoryLoading, setDirectoryLoading] = useState(false);
 
@@ -29,24 +29,28 @@ export default function PM2Manager() {
   }, []);
 
   const fetchServerPaths = async () => {
+    console.log('=== Fetching server paths...');
     try {
       const response = await fetch(`${API_URL}/server/paths`);
       const data = await response.json();
-      console.log('Server paths:', data);
+      console.log('=== Server paths response:', data);
       if (data.success) {
         // Check if we're in root, use /home instead
         const homePath = data.homeDir === '/root' ? '/home/kali' : data.homeDir;
+        console.log('=== Setting currentPath to:', homePath);
         setCurrentPath(homePath);
       }
     } catch (err) {
       console.error('Error fetching server paths:', err);
       // Fallback to /home/kali if fetch fails
+      console.log('=== Fallback: setting currentPath to /home/kali');
       setCurrentPath('/home/kali');
     }
   };
 
   const fetchDirectoryContents = async (path) => {
     setDirectoryLoading(true);
+    console.log('=== Fetching directory contents for:', path);
     try {
       const response = await fetch(`${API_URL}/list`, {
         method: 'POST',
@@ -54,26 +58,41 @@ export default function PM2Manager() {
         body: JSON.stringify({ dirs: [path] })
       });
       const data = await response.json();
-      console.log('Directory data:', data);
-      console.log('Path:', path);
-      if (data.success && data.result[path]?.success) {
-        const allEntries = data.result[path].entries;
-        console.log('All entries:', allEntries);
-        // Filter directories and exclude hidden files (starting with .)
-        const entries = allEntries
-          .filter(e => {
-            console.log('Entry:', e.name, 'isDirectory:', e.isDirectory, 'starts with dot:', e.name.startsWith('.'));
-            return e.isDirectory && !e.name.startsWith('.');
-          })
-          .sort((a, b) => a.name.localeCompare(b.name));
-        console.log('Filtered entries:', entries);
-        setDirectoryContents(entries);
+      console.log('=== API Response:', JSON.stringify(data, null, 2));
+      
+      if (data.success && data.result[path]) {
+        console.log('=== Result for path:', data.result[path]);
+        
+        if (data.result[path].success) {
+          const allEntries = data.result[path].entries;
+          console.log('=== Total entries:', allEntries.length);
+          
+          // Filter directories and exclude hidden files (starting with .)
+          const entries = allEntries
+            .filter(e => {
+              const isDir = e.isDirectory;
+              const isHidden = e.name.startsWith('.');
+              console.log(`  - ${e.name}: isDir=${isDir}, hidden=${isHidden}`);
+              return isDir && !isHidden;
+            })
+            .map(e => ({
+              ...e,
+              path: e.path || `${path}/${e.name}` // Ensure path is set
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+          
+          console.log('=== Filtered directories:', entries.length, entries.map(e => e.name));
+          setDirectoryContents(entries);
+        } else {
+          console.error('Directory read failed:', data.result[path].error);
+          alert('Failed to read directory: ' + data.result[path].error);
+        }
       } else {
-        console.error('Failed to load directory:', data);
+        console.error('Invalid response structure:', data);
         alert('Failed to load directory contents');
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error fetching directory:', err);
       alert('Error loading directory: ' + err.message);
     } finally {
       setDirectoryLoading(false);
@@ -81,13 +100,19 @@ export default function PM2Manager() {
   };
 
   const openDirectoryBrowser = () => {
+    console.log('=== Opening directory browser, currentPath:', currentPath);
     setShowDirectoryBrowser(true);
     if (currentPath) {
+      console.log('=== Calling fetchDirectoryContents with:', currentPath);
       fetchDirectoryContents(currentPath);
+    } else {
+      console.log('=== currentPath is null/undefined, not fetching');
     }
   };
 
   const navigateToDirectory = (path) => {
+    if (!path) return;
+    console.log('Navigating to:', path);
     setCurrentPath(path);
     fetchDirectoryContents(path);
   };

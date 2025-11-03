@@ -117,6 +117,7 @@ app.post('/files/upload', upload.array('files'), (req, res) => {
 // Directory listing endpoint
 app.post('/list', (req, res) => {
   const { dirs } = req.body;
+  
   if (!Array.isArray(dirs) || dirs.length === 0) {
     return res.status(400).json({ success: false, error: 'dirs must be a non-empty array' });
   }

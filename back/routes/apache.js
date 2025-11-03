@@ -97,4 +97,63 @@ router.get('/test', (req, res) => {
   });
 });
 
+// GET read config file content
+router.get('/config/:filename', (req, res) => {
+  const { filename } = req.params;
+  const fs = require('fs');
+  const configPath = `/etc/apache2/sites-available/${filename}`;
+  
+  exec(`sudo cat ${configPath}`, (err, stdout, stderr) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: 'Failed to read config file' });
+    }
+    res.json({ success: true, content: stdout, path: configPath });
+  });
+});
+
+// POST save config file content
+router.post('/config/:filename', (req, res) => {
+  const { filename } = req.params;
+  const { content } = req.body;
+  const fs = require('fs');
+  
+  if (!content) {
+    return res.status(400).json({ success: false, error: 'Content is required' });
+  }
+  
+  const configPath = `/etc/apache2/sites-available/${filename}`;
+  const tempFile = `/tmp/apache-config-${Date.now()}.conf`;
+  
+  try {
+    // Write content to temp file
+    fs.writeFileSync(tempFile, content, 'utf8');
+    
+    // Move temp file to Apache directory with sudo
+    const cmd = `sudo mv ${tempFile} ${configPath} && sudo chown root:root ${configPath} && sudo chmod 644 ${configPath}`;
+    
+    exec(cmd, (err, stdout, stderr) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: stderr || 'Failed to save config file' });
+      }
+      
+      // Test configuration after saving
+      exec('sudo apache2ctl configtest', (testErr, testStdout, testStderr) => {
+        const testOutput = testStdout + testStderr;
+        const testSuccess = testOutput.includes('Syntax OK');
+        
+        res.json({ 
+          success: true, 
+          message: 'Config file saved successfully',
+          configTest: {
+            success: testSuccess,
+            output: testOutput
+          }
+        });
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
