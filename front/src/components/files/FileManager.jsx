@@ -6,7 +6,7 @@ import FileToolbar from './FileToolbar.jsx';
 const API_BASE = 'http://localhost:5000';
 
 function mapEntriesToTree(entries, parentPath) {
-  return entries.map((e, idx) => ({
+  const mapped = entries.map((e, idx) => ({
     id: `${parentPath}:${e.name}:${idx}`,
     name: e.name,
     type: e.isDirectory ? 'folder' : 'file',
@@ -14,6 +14,14 @@ function mapEntriesToTree(entries, parentPath) {
     modified: e.modified || Date.now(),
     path: parentPath ? `${parentPath}/${e.name}` : e.name
   }));
+  
+  // Sort: folders first, then files, then alphabetically
+  return mapped.sort((a, b) => {
+    if (a.type === b.type) {
+      return a.name.localeCompare(b.name);
+    }
+    return a.type === 'folder' ? -1 : 1;
+  });
 }
 
 export default function FileManager() {
@@ -24,11 +32,12 @@ export default function FileManager() {
   const [history, setHistory] = useState([]);
   const [allowedRoots, setAllowedRoots] = useState(['/var/www/html']);
   const [homeDir, setHomeDir] = useState(null);
+  const [showHidden, setShowHidden] = useState(false);
 
   useEffect(() => {
     fetchServerPaths();
     fetchList(currentPath);
-  }, [currentPath]);
+  }, [currentPath, showHidden]);
 
   const fetchServerPaths = async () => {
     try {
@@ -47,13 +56,26 @@ export default function FileManager() {
     try {
       const res = await fetch(`${API_BASE}/list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dirs: [dirPath] }) });
       const data = await res.json();
+      console.log('📁 Fetching directory:', dirPath);
+      console.log('📊 Response data:', data);
       if (data.success) {
         const root = data.result[dirPath];
+        console.log('📂 Root entries:', root);
         if (root && root.success) {
+          console.log('📋 Raw entries count:', root.entries.length);
           const tree = mapEntriesToTree(root.entries, dirPath);
-          setFileStructure(tree);
+          console.log('🌲 Mapped tree count:', tree.length);
+          console.log('🌲 ALL FOLDERS:', tree.filter(f => f.type === 'folder').map(f => f.name));
+          console.log('🌲 ALL FILES:', tree.filter(f => f.type === 'file').map(f => f.name));
+          
+          // Filter hidden files if needed
+          const filtered = showHidden ? tree : tree.filter(f => !f.name.startsWith('.'));
+          console.log('👁️ Visible items count:', filtered.length);
+          
+          setFileStructure(filtered);
           setPathInput(dirPath);
         } else {
+          console.error('❌ Root error:', root?.error);
           setFileStructure([]);
         }
       }
@@ -240,8 +262,15 @@ export default function FileManager() {
             <div className="flex items-center space-x-1">
               <button onClick={() => goToPath('/var/www/html')} className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">Web Root</button>
               {homeDir && (
-                <button onClick={goToHome} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50">Home</button>
+                <button onClick={goToHome} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50">Home ({homeDir})</button>
               )}
+              <button onClick={() => goToPath('/root')} className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50">Root</button>
+              <button 
+                onClick={() => setShowHidden(!showHidden)} 
+                className={`text-xs px-2 py-1 rounded transition-colors ${showHidden ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-400'}`}
+              >
+                {showHidden ? '👁️ Hide Hidden' : '👁️‍🗨️ Show Hidden'}
+              </button>
             </div>
             <div className="flex-1" />
             <div className="flex items-center space-x-2">
