@@ -205,7 +205,7 @@ const PORT = process.env.PORT || 5002;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Backend server running on http://0.0.0.0:${PORT}`);
-  console.log(`Access from: http://142.93.220.168:${PORT}`);
+
   console.log('Socket.IO enabled for real-time updates');
   console.log('Route modules loaded successfully');
 });

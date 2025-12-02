@@ -6,7 +6,7 @@ export default function FileTree({ files, selectedFile, onFileSelect, onFolderNa
     if (file.type === 'folder') return <Folder className="w-4 h-4 text-blue-500" />;
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
-      case 'html': case 'htm': case 'xml': return <Code className="w-4 h-4 text-orange-500" />;
+      case 'html': case 'htm': return <Code className="w-4 h-4 text-orange-500" />;
       case 'css': case 'scss': case 'sass': return <Code className="w-4 h-4 text-blue-500" />;
       case 'js': case 'jsx': case 'ts': case 'tsx': return <Code className="w-4 h-4 text-yellow-500" />;
       case 'php': return <Code className="w-4 h-4 text-purple-500" />;
