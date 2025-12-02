@@ -15,7 +15,13 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:5173',
   'http://localhost:3000',
-  'http://127.0.0.1:3000'
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:6666',
+  'http://localhost:6666',
+  'http://142.93.220.168:5173',
+  'http://142.93.220.168:6666',
+  'http://142.93.220.168',
+  'http://142.93.220.168:80'
 ];
 
 
@@ -89,7 +95,7 @@ shell.onData((data) => {
   });
 });
 
-const PORT = 3000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
+const PORT = process.env.TERMINAL_PORT || 3000;
+server.listen(PORT, '0.0.0.0', () =>
+  console.log(`🚀 Terminal server running at http://0.0.0.0:${PORT}`)
 );

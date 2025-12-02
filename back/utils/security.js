@@ -4,8 +4,9 @@ const os = require('os');
 // Security: only allow operations under these roots
 const ALLOWED_ROOTS = [
   '/var/www/html',
-  os.homedir(),
-  '/home'
+  '/home/kali',
+  '/home/ubuntu',    // Oracle Cloud default user
+  '/root'            // Root user home (use cautiously)
 ];
 
 function isAllowedPath(p) {

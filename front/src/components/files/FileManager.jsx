@@ -261,10 +261,7 @@ export default function FileManager() {
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1">
               <button onClick={() => goToPath('/var/www/html')} className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">Web Root</button>
-              {homeDir && (
-                <button onClick={goToHome} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50">Home ({homeDir})</button>
-              )}
-              <button onClick={() => goToPath('/root')} className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50">Root</button>
+              <button onClick={() => goToPath('/home/kali')} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50">Home</button>
               <button 
                 onClick={() => setShowHidden(!showHidden)} 
                 className={`text-xs px-2 py-1 rounded transition-colors ${showHidden ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : 'bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-400'}`}

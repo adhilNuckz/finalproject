@@ -201,10 +201,11 @@ app.use((err, req, res, next) => {
 
 // ==================== Start Server ====================
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5002;
 
-server.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend server running on http://0.0.0.0:${PORT}`);
+  console.log(`Access from: http://142.93.220.168:${PORT}`);
   console.log('Socket.IO enabled for real-time updates');
   console.log('Route modules loaded successfully');
 });
