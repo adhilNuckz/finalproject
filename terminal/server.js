@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -11,12 +12,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 // Allow local dev origins (Vite dev server + localhost)
-const allowedOrigins = [
-  'http://127.0.0.1:5173',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173'];
 
 
 
@@ -89,7 +87,8 @@ shell.onData((data) => {
   });
 });
 
-const PORT = 3000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
+server.listen(PORT, HOST, () =>
+  console.log(`🚀 Terminal server running at http://${HOST}:${PORT}`)
 );

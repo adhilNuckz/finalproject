@@ -78,8 +78,9 @@ import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import io from "socket.io-client";
 import "xterm/css/xterm.css";
+import { TERMINAL_URL } from '../../config.js';
 
-const SOCKET_SERVER_URL = "http://localhost:3000";
+const SOCKET_SERVER_URL = TERMINAL_URL;
 
 export default function Terminal() {
   const terminalRef = useRef(null);

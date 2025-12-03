@@ -3,9 +3,10 @@ import SitesList from './SitesList.jsx';
 import SiteDetails from './SiteDetails.jsx';
 import AddSiteModal from './AddSiteModal.jsx';
 import { Plus } from 'lucide-react';
+import { API_URL } from '../../config.js';
 
-const API_BASE = 'http://localhost:5000';
-const SOCKET_URL = 'http://localhost:5000';
+const API_BASE = API_URL;
+const SOCKET_URL = API_URL;
 
 export default function Sites() {
   const [sites, setSites] = useState([]);

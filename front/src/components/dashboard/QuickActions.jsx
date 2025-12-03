@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, RefreshCw, Shield, Database, Settings, Monitor, Globe } from 'lucide-react';
 import DNSConfigModal from '../sites/DNSConfigModal.jsx';
+import { API_URL } from '../../config.js';
 
 const actions = [
   { id: 'add-site', title: 'Add New Site', description: 'Create a new website or subdomain', icon: Plus, color: 'bg-blue-500 hover:bg-blue-600' },
@@ -23,7 +24,7 @@ export default function QuickActions({ onAddSite }) {
         break;
       case 'restart-services':
         if (confirm('Restart Apache service?')) {
-          fetch('http://localhost:5000/api/apache/control', {
+          fetch(`${API_URL}/api/apache/control`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'restart' })

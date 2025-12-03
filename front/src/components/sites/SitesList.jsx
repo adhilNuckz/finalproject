@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Globe, CheckCircle, XCircle, AlertCircle, Play, Pause, RotateCcw, Shield, Eye, Lock, ExternalLink } from 'lucide-react';
+import { API_URL } from '../../config.js';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = API_URL;
 
 export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpdate, onSiteAction, loading }) {
   const [installingSSL, setInstallingSSL] = useState({});

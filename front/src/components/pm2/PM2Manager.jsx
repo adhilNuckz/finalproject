@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Square, RefreshCw, Trash2, AlertCircle, CheckCircle, XCircle, Loader, Plus, X, FolderOpen, Folder, ChevronRight, Home } from 'lucide-react';
+import { API_URL } from '../../config.js';
 
 export default function PM2Manager() {
   const [processes, setProcesses] = useState([]);
@@ -18,8 +19,6 @@ export default function PM2Manager() {
   const [currentPath, setCurrentPath] = useState('/home/kali');
   const [directoryContents, setDirectoryContents] = useState([]);
   const [directoryLoading, setDirectoryLoading] = useState(false);
-
-  const API_URL = 'http://localhost:5000';
 
   useEffect(() => {
     fetchProcesses();
