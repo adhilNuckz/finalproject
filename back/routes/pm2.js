@@ -7,13 +7,35 @@ const { runExecStream } = require('../utils/exec');
 router.get('/list', (req, res) => {
   exec('pm2 jlist', (err, stdout, stderr) => {
     if (err) {
+      console.error('PM2 exec error:', err);
       return res.status(500).json({ success: false, error: 'Failed to get PM2 list. Make sure PM2 is installed.' });
     }
+    
+    // Log the actual output for debugging
+    console.log('PM2 stdout:', stdout);
+    console.log('PM2 stderr:', stderr);
+    
     try {
-      const processes = JSON.parse(stdout);
+      // Trim and check if output is empty
+      const trimmedOutput = stdout.trim();
+      if (!trimmedOutput) {
+        return res.json({ success: true, processes: [] });
+      }
+      
+      // Remove any non-JSON content (like PM2 warnings)
+      const jsonMatch = trimmedOutput.match(/^\[.*\]$/s);
+      const jsonString = jsonMatch ? jsonMatch[0] : trimmedOutput;
+      
+      const processes = JSON.parse(jsonString);
       res.json({ success: true, processes });
     } catch (e) {
-      res.status(500).json({ success: false, error: 'Failed to parse PM2 output' });
+      console.error('PM2 parse error:', e);
+      console.error('Raw output:', stdout);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to parse PM2 output',
+        rawOutput: stdout.substring(0, 200) // Send first 200 chars for debugging
+      });
     }
   });
 });
