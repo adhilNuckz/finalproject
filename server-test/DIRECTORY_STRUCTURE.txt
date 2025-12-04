@@ -1,0 +1,9 @@
+  
+  backend
+    routes
+    uploads
+    utils
+  frontend
+    src
+  terminal
+    public

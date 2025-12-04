@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1761842922667",
+    "domain": "nuckz.live",
+    "status": "active",
+    "addedAt": "2025-10-30T16:48:42.667Z"
+  },
+  {
+    "id": "1761842946794",
+    "domain": "new.com",
+    "status": "active",
+    "addedAt": "2025-10-30T16:49:06.794Z"
+  },
+  {
+    "id": "1761853706020",
+    "domain": "uranium.com",
+    "status": "active",
+    "addedAt": "2025-10-30T19:48:26.020Z"
+  },
+  {
+    "id": "1762048104001",
+    "domain": "test.test",
+    "status": "active",
+    "addedAt": "2025-11-02T01:48:24.001Z"
+  },
+  {
+    "id": "1764765741968",
+    "domain": "local.local",
+    "status": "active",
+    "addedAt": "2025-12-03T12:42:21.968Z"
+  }
+]
