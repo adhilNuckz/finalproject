@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Square, RefreshCw, Trash2, AlertCircle, CheckCircle, XCircle, Loader, Plus, X, FolderOpen, Folder, ChevronRight, Home } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 export default function PM2Manager() {
   const [processes, setProcesses] = useState([]);
@@ -19,7 +20,7 @@ export default function PM2Manager() {
   const [directoryContents, setDirectoryContents] = useState([]);
   const [directoryLoading, setDirectoryLoading] = useState(false);
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = API_BASE_URL;
 
   useEffect(() => {
     fetchProcesses();
