@@ -48,38 +48,65 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, "public")));
 
+// Store terminal sessions per socket
+const terminalSessions = new Map();
+
 io.on("connection", (socket) => {
   console.log("✅ Client connected");
+  
+  // Store sessions for this socket
+  const sessions = new Map();
+  terminalSessions.set(socket.id, sessions);
 
-  // Start a bash shell
-  const shell = spawn("bash", [], {
-    name: "xterm-color",
-    cols: 80,
-    rows: 30,
-    cwd: process.env.HOME,
-    env: process.env,
+  // Create a new terminal session
+  socket.on("create-session", ({ sessionId }) => {
+    console.log(`Creating session: ${sessionId}`);
+    
+    const shell = spawn("bash", [], {
+      name: "xterm-color",
+      cols: 80,
+      rows: 30,
+      cwd: process.env.HOME,
+      env: process.env,
+    });
+
+    // Store session
+    sessions.set(sessionId, shell);
+
+    // Send shell output to frontend
+    shell.onData((data) => {
+      socket.emit("output", { sessionId, data });
+    });
+
+    shell.on("exit", () => {
+      console.log(`Session ${sessionId} exited`);
+      sessions.delete(sessionId);
+      socket.emit("session-closed", { sessionId });
+    });
+
+    socket.emit("session-created", { sessionId });
   });
 
-  // Send shell output to frontend
-shell.onData((data) => {
-  socket.emit("output", data); // send raw data
-});
-
-
-
-
   // When user sends command from frontend
-  socket.on("input", (data) => {
+  socket.on("input", ({ sessionId, data }) => {
+    const shell = sessions.get(sessionId);
+    if (!shell) {
+      console.warn(`Session ${sessionId} not found`);
+      return;
+    }
+    
     try {
-      // write raw data to the pty; data may be single keys or full commands with newline
       shell.write(data);
     } catch (e) {
       console.warn('Failed to write to shell', e);
     }
   });
 
-  // handle resize from client
-  socket.on('resize', ({ cols, rows }) => {
+  // Handle resize from client
+  socket.on('resize', ({ sessionId, cols, rows }) => {
+    const shell = sessions.get(sessionId);
+    if (!shell) return;
+    
     try {
       shell.resize(Math.max(1, cols), Math.max(1, rows));
     } catch (e) {
@@ -87,9 +114,31 @@ shell.onData((data) => {
     }
   });
 
+  // Close a specific session
+  socket.on("close-session", ({ sessionId }) => {
+    const shell = sessions.get(sessionId);
+    if (shell) {
+      try {
+        shell.kill();
+      } catch (e) {
+        console.warn('Failed to kill shell', e);
+      }
+      sessions.delete(sessionId);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected");
-    try { shell.kill(); } catch (e) {}
+    // Kill all sessions for this socket
+    sessions.forEach((shell, sessionId) => {
+      try {
+        shell.kill();
+      } catch (e) {
+        console.warn(`Failed to kill session ${sessionId}`, e);
+      }
+    });
+    sessions.clear();
+    terminalSessions.delete(socket.id);
   });
 });
 
