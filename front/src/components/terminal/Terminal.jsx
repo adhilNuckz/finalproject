@@ -1,94 +1,169 @@
-// import React, { useState, useEffect, useRef } from 'react';
-// import { Terminal as TerminalIcon, Maximize2, Minimize2, Copy, Download } from 'lucide-react';
-// import io from 'socket.io-client';
-
-// const SOCKET_SERVER_URL = 'http://localhost:3000';
-
-// export default function Terminal() {
-//   const [socket, setSocket] = useState(null);
-//   const [isConnected, setIsConnected] = useState(false);
-//   const [isFullscreen, setIsFullscreen] = useState(false);
-//   const [currentInput, setCurrentInput] = useState('');
-//   const [lines, setLines] = useState([{ id: 1, type: 'output', content: 'Connecting to Linux Hosting Manager Terminal...', timestamp: new Date() }]);
-
-//   const terminalRef = useRef(null);
-//   const inputRef = useRef(null);
-
-//   useEffect(() => {
-//     const newSocket = io(SOCKET_SERVER_URL, { reconnectionAttempts: 5, timeout: 20000 });
-//     newSocket.on('connect', () => { setIsConnected(true); setLines(prev => [...prev, { id: Date.now(), type: 'output', content: '✅ Connected to webserver shell.', timestamp: new Date() }]); });
-//     newSocket.on('disconnect', () => { setIsConnected(false); setLines(prev => [...prev, { id: Date.now(), type: 'error', content: '❌ Disconnected from webserver shell.', timestamp: new Date() }]); });
-//     newSocket.on('connect_error', (error) => { setLines(prev => [...prev, { id: Date.now(), type: 'error', content: `Connection Error: ${error.message}. Please ensure the backend is running on ${SOCKET_SERVER_URL}.`, timestamp: new Date() }]); });
-//     newSocket.on('output', (data) => { const rawOutput = data.replace(/\r\n/g, '\n').replace(/\r/g, '\n'); const newLines = rawOutput.split('\n').map((lineContent, index) => ({ id: Date.now() + index + Math.random(), type: lineContent.startsWith('bash:') || lineContent.includes('error') ? 'error' : 'output', content: lineContent, timestamp: new Date() })); setLines(prev => [...prev, ...newLines]); });
-//     setSocket(newSocket);
-//     return () => { newSocket.off('connect'); newSocket.off('disconnect'); newSocket.off('connect_error'); newSocket.off('output'); newSocket.close(); };
-//   }, []);
-
-//   const sendCommandToBackend = (command) => {
-//     const trimmedCommand = command.trim(); if (!trimmedCommand) return; if (!isConnected) { setLines(prev => [...prev, { id: Date.now(), type: 'error', content: `❌ Not connected. Cannot send command: ${trimmedCommand}`, timestamp: new Date() }]); return; }
-//     setLines(prev => [...prev, { id: Date.now(), type: 'input', content: trimmedCommand, timestamp: new Date() }]);
-//     socket.emit('input', trimmedCommand + '\r');
-//     if (trimmedCommand === 'clear') setLines([]);
-//   };
-
-//   const executeCommand = (command) => { sendCommandToBackend(command); };
-
-//   const handleKeyDown = (e) => { if (e.key === 'Enter') { executeCommand(currentInput); setCurrentInput(''); } };
-
-//   useEffect(() => { if (terminalRef.current) terminalRef.current.scrollTop = terminalRef.current.scrollHeight; }, [lines]);
-//   const focusInput = () => { inputRef.current?.focus(); };
-
-//   const copyToClipboard = () => { const terminalText = lines.map(line => line.content).join('\n'); navigator.clipboard.writeText(terminalText); };
-//   const downloadLog = () => { const terminalText = lines.map(line => `[${line.timestamp.toISOString()}] ${line.content}`).join('\n'); const blob = new Blob([terminalText], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `terminal-session-${new Date().toISOString().split('T')[0]}.log`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); };
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Terminal <span className={`ml-3 text-sm font-medium ${isConnected ? 'text-green-500' : 'text-red-500'}`}>{isConnected ? 'LIVE' : 'DISCONNECTED'}</span></h1>
-//         <div className="flex items-center space-x-2">
-//           <button onClick={copyToClipboard} className="flex items-center px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors" title="Copy Terminal Output"><Copy className="w-4 h-4 mr-2" />Copy</button>
-//           <button onClick={downloadLog} className="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" title="Download Session Log"><Download className="w-4 h-4 mr-2" />Download</button>
-//           <button onClick={() => setIsFullscreen(!isFullscreen)} className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}>{isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}</button>
-//         </div>
-//       </div>
-
-//       <div className={`bg-gray-900 rounded-xl shadow-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 rounded-none' : ''}`}>
-//         <div className="flex items-center justify-between bg-gray-800 px-4 py-3 border-b border-gray-700"><div className="flex items-center"><TerminalIcon className="w-5 h-5 text-green-400 mr-2" /><span className="text-sm font-medium text-gray-300">Webserver Shell</span></div><div className="flex space-x-2"><div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div><div className="w-3 h-3 bg-yellow-500 rounded-full"></div><div className="w-3 h-3 bg-red-500 rounded-full"></div></div></div>
-
-//         <div className={`bg-black text-green-400 font-mono text-sm overflow-y-auto ${isFullscreen ? 'h-screen' : 'h-96'}`} ref={terminalRef} onClick={focusInput}>
-//           <div className="p-4 space-y-1">
-//             {lines.map(line => (<div key={line.id} className={`${line.type === 'input' ? 'text-cyan-400' : line.type === 'error' ? 'text-red-400' : 'text-green-400'}`}>{line.content}</div>))}
-//             <div className="flex items-center"><input ref={inputRef} type="text" value={currentInput} onChange={(e) => setCurrentInput(e.target.value)} onKeyDown={handleKeyDown} className="flex-1 bg-transparent border-none outline-none text-green-400 ml-0" autoFocus /><span className="animate-pulse">█</span></div>
-//           </div>
-//         </div>
-//       </div>
-
-//       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-//         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Commands</h3>
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">{[
-//           { cmd: 'ls -la', desc: 'List all files with details' }, { cmd: 'df -h', desc: 'Show disk usage' }, { cmd: 'ps aux', desc: 'Show all processes' }, { cmd: 'systemctl status apache2', desc: 'Check Apache status' }, { cmd: 'tail -f /var/log/access.log', desc: 'Monitor access logs' }, { cmd: 'top', desc: 'Show system processes' }
-//         ].map((item, index) => (<button key={index} onClick={() => { executeCommand(item.cmd); setCurrentInput(''); }} className="text-left p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"><div className="text-sm font-mono text-blue-600 dark:text-blue-400">{item.cmd}</div><div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.desc}</div></button>))}</div>
-//       </div>
-//     </div>
-//   );
-// }
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Terminal as XTerm } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
+import { Plus, X, Download } from "lucide-react";
 import io from "socket.io-client";
 import "xterm/css/xterm.css";
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
 
 export default function Terminal() {
-  const terminalRef = useRef(null);
+  const [sessions, setSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
   const socketRef = useRef(null);
-  const termRef = useRef(null);
-  const fitAddonRef = useRef(null);
+  const terminalsRef = useRef(new Map()); // sessionId -> { term, fitAddon, containerRef }
 
   useEffect(() => {
-    // === Initialize Terminal ===
+    // Initialize Socket.IO
+    const socket = io(SOCKET_SERVER_URL, { transports: ["websocket"] });
+    socketRef.current = socket;
+
+    let initialSessionCreated = false;
+
+    socket.on("connect", () => {
+      console.log("Connected to terminal server");
+      // Create first session on connect
+      if (!initialSessionCreated) {
+        initialSessionCreated = true;
+        const sessionId = `session-${Date.now()}`;
+        const newSession = {
+          id: sessionId,
+          name: `Terminal 1`,
+          created: new Date(),
+        };
+        setSessions([newSession]);
+        setActiveSessionId(sessionId);
+        socket.emit("create-session", { sessionId });
+      }
+    });
+
+    socket.on("session-created", ({ sessionId }) => {
+      console.log(`Session ${sessionId} created`);
+    });
+
+    socket.on("output", ({ sessionId, data }) => {
+      const termData = terminalsRef.current.get(sessionId);
+      if (termData && termData.term) {
+        termData.term.write(data);
+      }
+    });
+
+    socket.on("session-closed", ({ sessionId }) => {
+      // Close terminal
+      const termData = terminalsRef.current.get(sessionId);
+      if (termData && termData.term) {
+        termData.term.dispose();
+      }
+      terminalsRef.current.delete(sessionId);
+
+      // Update sessions list
+      setSessions((prev) => {
+        const filtered = prev.filter((s) => s.id !== sessionId);
+        
+        // If closing active session, switch to another
+        setActiveSessionId((currentActive) => {
+          if (sessionId === currentActive && filtered.length > 0) {
+            return filtered[0].id;
+          } else if (filtered.length === 0) {
+            return null;
+          }
+          return currentActive;
+        });
+        
+        return filtered;
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from terminal server");
+    });
+
+    return () => {
+      // Cleanup all terminals
+      terminalsRef.current.forEach((termData) => {
+        if (termData.term) {
+          termData.term.dispose();
+        }
+      });
+      socket.disconnect();
+    };
+  }, []);
+
+  const createNewSession = () => {
+    const sessionId = `session-${Date.now()}`;
+    const newSession = {
+      id: sessionId,
+      name: `Terminal ${sessions.length + 1}`,
+      created: new Date(),
+    };
+
+    setSessions((prev) => [...prev, newSession]);
+    setActiveSessionId(sessionId);
+
+    // Tell server to create session
+    if (socketRef.current) {
+      socketRef.current.emit("create-session", { sessionId });
+    }
+  };
+
+  const closeSession = (sessionId) => {
+    // Close terminal
+    const termData = terminalsRef.current.get(sessionId);
+    if (termData && termData.term) {
+      termData.term.dispose();
+    }
+    terminalsRef.current.delete(sessionId);
+
+    // Update sessions list
+    setSessions((prev) => {
+      const filtered = prev.filter((s) => s.id !== sessionId);
+      
+      // If closing active session, switch to another
+      if (sessionId === activeSessionId && filtered.length > 0) {
+        setActiveSessionId(filtered[0].id);
+      } else if (filtered.length === 0) {
+        setActiveSessionId(null);
+      }
+      
+      return filtered;
+    });
+
+    // Tell server to close session
+    if (socketRef.current) {
+      socketRef.current.emit("close-session", { sessionId });
+    }
+  };
+
+  const downloadSessionLog = (sessionId) => {
+    const termData = terminalsRef.current.get(sessionId);
+    if (!termData || !termData.term) return;
+
+    const term = termData.term;
+    const buffer = term.buffer.active;
+    let content = "";
+
+    for (let i = 0; i < buffer.length; i++) {
+      const line = buffer.getLine(i);
+      if (line) {
+        content += line.translateToString(true) + "\n";
+      }
+    }
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `terminal-${sessionId}-${new Date().toISOString()}.log`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const initializeTerminal = (containerRef, sessionId) => {
+    if (!containerRef || terminalsRef.current.has(sessionId)) return;
+
     const term = new XTerm({
       fontFamily: "monospace",
       fontSize: 14,
@@ -105,67 +180,142 @@ export default function Terminal() {
 
     term.loadAddon(fitAddon);
     term.loadAddon(webLinksAddon);
-    term.open(terminalRef.current);
-    fitAddon.fit();
+    term.open(containerRef);
+    
+    setTimeout(() => {
+      fitAddon.fit();
+      // Send initial resize
+      if (socketRef.current) {
+        socketRef.current.emit("resize", {
+          sessionId,
+          cols: term.cols,
+          rows: term.rows,
+        });
+      }
+    }, 100);
 
     term.writeln("🌐 Connecting to remote shell...\r\n");
 
-    // === Initialize Socket.IO ===
-    const socket = io(SOCKET_SERVER_URL, { transports: ["websocket"] });
-    socketRef.current = socket;
-    termRef.current = term;
-    fitAddonRef.current = fitAddon;
-
-    // === Connection Events ===
-    socket.on("connect", () => {
-      term.writeln("✅ Connected to webserver shell.\r\n");
-      socket.emit("resize", { cols: term.cols, rows: term.rows });
-    });
-
-    socket.on("disconnect", () => {
-      term.writeln("\r\n❌ Disconnected from server.\r\n");
-    });
-
-    socket.on("output", (data) => {
-      term.write(data);
-    });
-
-    socket.on("clear", () => {
-      term.clear();
-    });
-
-    // === Handle User Input ===
+    // Handle user input
     term.onData((data) => {
-      socket.emit("input", data); // send to server
+      if (socketRef.current) {
+        socketRef.current.emit("input", { sessionId, data });
+      }
     });
 
-    // === Auto-fit on window resize ===
+    // Store terminal data
+    terminalsRef.current.set(sessionId, {
+      term,
+      fitAddon,
+      containerRef,
+    });
+
+    // Handle resize
     const handleResize = () => {
-      fitAddon.fit();
-      socket.emit("resize", { cols: term.cols, rows: term.rows });
+      if (terminalsRef.current.has(sessionId)) {
+        const termData = terminalsRef.current.get(sessionId);
+        termData.fitAddon.fit();
+        if (socketRef.current) {
+          socketRef.current.emit("resize", {
+            sessionId,
+            cols: termData.term.cols,
+            rows: termData.term.rows,
+          });
+        }
+      }
     };
+
     window.addEventListener("resize", handleResize);
-
-    // === Cleanup ===
+    
     return () => {
-      socket.disconnect();
-      window.removeEventListener("resize", handleResize);              
-      term.dispose();
+      window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  };
 
-  // === UI ===
   return (
-    <div
-      ref={terminalRef}
-      style={{
-        height: "80vh",
-        width: "100%",
-        backgroundColor: "#000",
-        borderRadius: "10px",
-        padding: "5px",
-        overflow: "hidden",
-      }}
-    />
+    <div className="h-full flex flex-col">
+      {/* Tabs Bar */}
+      <div className="flex items-center bg-gray-900 border-b border-gray-700 overflow-x-auto">
+        {sessions.map((session) => (
+          <div
+            key={session.id}
+            className={`flex items-center gap-2 px-4 py-2 border-r border-gray-700 cursor-pointer transition-colors ${
+              activeSessionId === session.id
+                ? "bg-gray-800 text-green-400"
+                : "bg-gray-900 text-gray-400 hover:bg-gray-800"
+            }`}
+            onClick={() => setActiveSessionId(session.id)}
+          >
+            <span className="text-sm font-medium whitespace-nowrap">
+              {session.name}
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadSessionLog(session.id);
+              }}
+              className="p-1 hover:bg-gray-700 rounded transition-colors"
+              title="Download session log"
+            >
+              <Download className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                closeSession(session.id);
+              }}
+              className="p-1 hover:bg-red-600 rounded transition-colors"
+              title="Close session"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+        
+        {/* Add New Session Button */}
+        <button
+          onClick={createNewSession}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-green-400 transition-colors whitespace-nowrap"
+          title="New terminal session"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="text-sm font-medium">New Session</span>
+        </button>
+      </div>
+
+      {/* Terminal Content */}
+      <div className="flex-1 relative bg-black">
+        {sessions.map((session) => (
+          <div
+            key={session.id}
+            ref={(ref) => {
+              if (ref && session.id === activeSessionId) {
+                initializeTerminal(ref, session.id);
+              }
+            }}
+            style={{
+              display: activeSessionId === session.id ? "block" : "none",
+              height: "100%",
+              width: "100%",
+              padding: "10px",
+            }}
+          />
+        ))}
+        
+        {sessions.length === 0 && (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="text-center">
+              <p className="text-lg mb-2">No terminal sessions</p>
+              <button
+                onClick={createNewSession}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                Create New Session
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
