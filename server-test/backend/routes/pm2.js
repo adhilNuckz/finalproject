@@ -5,7 +5,7 @@ const { runExecStream } = require('../utils/exec');
 
 // GET all PM2 processes
 router.get('/list', (req, res) => {
-  exec('pm2 jlist', (err, stdout, stderr) => {
+  exec('/usr/bin/pm2 jlist', (err, stdout, stderr) => {
     if (err) {
       return res.status(500).json({ success: false, error: 'Failed to get PM2 list. Make sure PM2 is installed.' });
     }
@@ -41,7 +41,7 @@ router.post('/control', (req, res) => {
     
     // Emit updated PM2 list after action
     setTimeout(() => {
-      exec('pm2 jlist', (err, stdout) => {
+      exec('/usr/bin/pm2 jlist', (err, stdout) => {
         if (!err) {
           try {
             const processes = JSON.parse(stdout);
