@@ -41,6 +41,75 @@ const io = new Server(server, {
 // Socket.IO connection handler
 io.on('connection', (socket) => {
   console.log('Socket connected:', socket.id);
+  
+  // Start emitting server stats every 2 seconds
+  const statsInterval = setInterval(() => {
+    const os = require('os');
+    const { exec } = require('child_process');
+    
+    try {
+      // CPU Usage
+      const cpus = os.cpus();
+      let totalIdle = 0, totalTick = 0;
+      cpus.forEach(cpu => {
+        for (let type in cpu.times) {
+          totalTick += cpu.times[type];
+        }
+        totalIdle += cpu.times.idle;
+      });
+      const cpuUsage = 100 - ~~(100 * totalIdle / totalTick);
+
+      // Memory Usage
+      const totalMem = os.totalmem();
+      const freeMem = os.freemem();
+      const usedMem = totalMem - freeMem;
+      const memUsage = ((usedMem / totalMem) * 100).toFixed(1);
+
+      // Uptime
+      const uptime = os.uptime();
+
+      // Disk usage via shell command
+      exec("df -h / | tail -1 | awk '{print $3, $2, $5}'", (err, stdout) => {
+        let diskUsed = '0 GB', diskTotal = '0 GB', diskPercent = 0;
+        
+        if (!err && stdout) {
+          const parts = stdout.trim().split(' ');
+          diskUsed = parts[0] || '0G';
+          diskTotal = parts[1] || '0G';
+          diskPercent = parseInt(parts[2]) || 0;
+        }
+
+        socket.emit('server-stats', {
+          cpu: {
+            usage: cpuUsage,
+            cores: cpus.length
+          },
+          memory: {
+            used: (usedMem / (1024 ** 3)).toFixed(2),
+            total: (totalMem / (1024 ** 3)).toFixed(2),
+            percentage: parseFloat(memUsage)
+          },
+          disk: {
+            used: diskUsed,
+            total: diskTotal,
+            percentage: diskPercent
+          },
+          uptime: {
+            seconds: uptime
+          },
+          timestamp: Date.now()
+        });
+      });
+    } catch (error) {
+      console.error('Error emitting stats:', error);
+    }
+  }, 2000);
+  
+  // Clean up interval on disconnect
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected:', socket.id);
+    clearInterval(statsInterval);
+  });
 });
 
 // Make io accessible to routes

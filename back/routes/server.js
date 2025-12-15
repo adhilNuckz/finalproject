@@ -1,6 +1,75 @@
 const express = require('express');
 const router = express.Router();
 const { exec } = require('child_process');
+const os = require('os');
+
+// Get real-time server stats
+router.get('/stats', (req, res) => {
+  try {
+    // CPU Usage
+    const cpus = os.cpus();
+    let totalIdle = 0, totalTick = 0;
+    cpus.forEach(cpu => {
+      for (let type in cpu.times) {
+        totalTick += cpu.times[type];
+      }
+      totalIdle += cpu.times.idle;
+    });
+    const cpuUsage = 100 - ~~(100 * totalIdle / totalTick);
+
+    // Memory Usage
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const memUsage = ((usedMem / totalMem) * 100).toFixed(1);
+
+    // Uptime
+    const uptime = os.uptime();
+    const days = Math.floor(uptime / 86400);
+    const hours = Math.floor((uptime % 86400) / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const uptimeStr = `${days}d ${hours}h ${minutes}m`;
+
+    // Disk usage via shell command
+    exec("df -h / | tail -1 | awk '{print $3, $2, $5}'", (err, stdout) => {
+      let diskUsed = '0 GB', diskTotal = '0 GB', diskPercent = 0;
+      
+      if (!err && stdout) {
+        const parts = stdout.trim().split(' ');
+        diskUsed = parts[0] || '0G';
+        diskTotal = parts[1] || '0G';
+        diskPercent = parseInt(parts[2]) || 0;
+      }
+
+      res.json({
+        success: true,
+        stats: {
+          cpu: {
+            usage: cpuUsage,
+            cores: cpus.length
+          },
+          memory: {
+            used: (usedMem / (1024 ** 3)).toFixed(2),
+            total: (totalMem / (1024 ** 3)).toFixed(2),
+            percentage: memUsage
+          },
+          disk: {
+            used: diskUsed,
+            total: diskTotal,
+            percentage: diskPercent
+          },
+          uptime: {
+            seconds: uptime,
+            formatted: uptimeStr
+          },
+          timestamp: Date.now()
+        }
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Get server IP address
 router.get('/ip', (req, res) => {

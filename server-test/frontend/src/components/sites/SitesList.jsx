@@ -114,30 +114,28 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                {/* Protocol Selector Dropdown */}
-                <div className="relative">
+                {/* Protocol Selector Button Group */}
+                <div className="inline-flex rounded-md shadow-sm" role="group">
                   <button 
                     onClick={(e) => openSite(site, 'http', e)} 
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-l-md transition-colors flex items-center"
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-l-md transition-colors inline-flex items-center"
                     title="Open with HTTP"
                   >
                     <ExternalLink className="w-3 h-3 mr-1" />
                     HTTP
                   </button>
-                  {site.ssl && (
+                  {site.ssl ? (
                     <button 
                       onClick={(e) => openSite(site, 'https', e)} 
-                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-r-md transition-colors flex items-center border-l border-green-500"
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-r-md transition-colors inline-flex items-center -ml-px"
                       title="Open with HTTPS"
                     >
                       <Lock className="w-3 h-3 mr-1" />
                       HTTPS
                     </button>
-                  )}
-                  {!site.ssl && (
+                  ) : (
                     <button 
-                      onClick={(e) => openSite(site, 'http', e)} 
-                      className="px-3 py-1.5 bg-gray-400 text-white text-sm rounded-r-md cursor-not-allowed flex items-center border-l border-gray-300"
+                      className="px-3 py-1.5 bg-gray-400 dark:bg-gray-600 text-white text-sm font-medium rounded-r-md cursor-not-allowed inline-flex items-center opacity-60 -ml-px"
                       title="HTTPS not available - Install SSL first"
                       disabled
                     >
@@ -171,11 +169,11 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
               
               <div className="flex items-center space-x-1">
                 <button 
-                  onClick={(e) => { e.stopPropagation(); handleAction(site, (site.status === 'online' || site.status === 'maintenance') ? 'stop' : 'start'); }} 
-                  className={`p-1.5 rounded-md transition-colors ${(site.status === 'online' || site.status === 'maintenance') ? 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
-                  title={(site.status === 'online' || site.status === 'maintenance') ? 'Pause (Maintenance Mode)' : 'Play (Resume Site)'}
+                  onClick={(e) => { e.stopPropagation(); handleAction(site, site.status === 'offline' ? 'start' : 'stop'); }} 
+                  className={`p-1.5 rounded-md transition-colors ${site.status === 'online' ? 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                  title={site.status === 'online' ? 'Pause (Maintenance Mode)' : 'Play (Resume Site)'}
                 >
-                  {(site.status === 'online' || site.status === 'maintenance') ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {site.status === 'online' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleAction(site, 'restart'); }} 
