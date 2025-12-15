@@ -22,9 +22,9 @@ export default function Sites() {
         id: s.name || `${s.domain || 'site'}-${idx}`,
         name: s.name || `${s.domain || 'site'}-${idx}`,
         domain: s.domain || `${s.name || s.domain || 'site'}.local`,
-        status: (s.status === 'enabled' || s.status === 'online') ? 'online' : 'offline',
-  ssl: false,
-  visitors: 42,
+        status: s.status === 'enabled' ? 'online' : s.status === 'maintenance' ? 'maintenance' : 'offline',
+        ssl: s.ssl || false,
+        visitors: 42,
         path: `/var/www/${s.name}`,
         phpVersion: '8.1',
         created: Date.now() - idx * 86400000,
@@ -49,7 +49,7 @@ export default function Sites() {
       socketRef.current = socket;
       socket.on('sites:updated', (sites) => {
         // map server sites into our mapped shape
-        const mapped = sites.map((s, idx) => ({ id: s.name || `${s.domain || 'site'}-${idx}`, name: s.name || `${s.domain || 'site'}-${idx}`, domain: s.domain || `${s.name || s.domain || 'site'}.local`, status: (s.status === 'enabled' || s.status === 'online') ? 'online' : 'offline', ssl: false, visitors: 42, path: `/var/www/${s.name}`, phpVersion: '8.1', created: Date.now() - idx * 86400000 }));
+        const mapped = sites.map((s, idx) => ({ id: s.name || `${s.domain || 'site'}-${idx}`, name: s.name || `${s.domain || 'site'}-${idx}`, domain: s.domain || `${s.name || s.domain || 'site'}.local`, status: s.status === 'enabled' ? 'online' : s.status === 'maintenance' ? 'maintenance' : 'offline', ssl: s.ssl || false, visitors: 42, path: `/var/www/${s.name}`, phpVersion: '8.1', created: Date.now() - idx * 86400000 }));
         setSites(mapped);
       });
 
@@ -79,7 +79,7 @@ export default function Sites() {
       return;
     }
 
-    const actionMap = { start: 'enable', stop: 'disable', restart: 'maintenance' };
+    const actionMap = { start: 'enable', stop: 'maintenance', restart: 'maintenance' };
     const backendAction = actionMap[action] || action;
 
     try {

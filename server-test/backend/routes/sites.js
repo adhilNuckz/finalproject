@@ -51,26 +51,92 @@ router.post('/', (req, res) => {
       if (!isEnabled) {
         return res.status(400).json({ success: false, error: `Cannot enable maintenance; site ${site} is disabled` });
       }
-      // Create maintenance page if doesn't exist
-      const maintenanceHTML = '<!DOCTYPE html><html><head><title>Under Maintenance</title><style>body{font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f5f5f5}div{text-align:center;padding:40px;background:white;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#ff6b6b;margin:0 0 20px}p{color:#666}</style></head><body><div><h1>⚠️ Under Maintenance</h1><p>This site is temporarily unavailable. Please check back soon.</p></div></body></html>';
-      const maintenanceConf = `<VirtualHost *:80>
-        ServerName ${site}
-        DocumentRoot /var/www/html/maintenance
-        <Directory /var/www/html/maintenance>
-          Options -Indexes +FollowSymLinks
-          AllowOverride None
-          Require all granted
-        </Directory>
-        </VirtualHost>`;
       
-      cmd = [
-        `sudo mkdir -p /var/www/html/maintenance`,
-        `if [ ! -f /var/www/html/maintenance/index.html ]; then echo '${maintenanceHTML}' | sudo tee /var/www/html/maintenance/index.html; fi`,
-        `if [ ! -f ${confFile}.bak ]; then sudo cp ${confFile} ${confFile}.bak; fi`,
-        `echo '${maintenanceConf}' | sudo tee ${confFile}`,
-        `sudo apache2ctl configtest`,
-        `sudo systemctl reload apache2`
-      ].join(' && ');
+      // Check if already in maintenance (has .bak file)
+      const hasBackup = fs.existsSync(`${confFile}.bak`);
+      
+      if (hasBackup) {
+        // Restore from maintenance
+        const sslConfFile = `/etc/apache2/sites-available/${site}-le-ssl.conf`;
+        const hasSSlBackup = fs.existsSync(`${sslConfFile}.bak`);
+        const sslEnabledFile = `/etc/apache2/sites-enabled/${site}-le-ssl.conf`;
+        
+        cmd = [
+          // Restore HTTP config
+          `sudo mv ${confFile}.bak ${confFile}`,
+          // Restore HTTPS config if exists
+          hasSSlBackup ? `sudo mv ${sslConfFile}.bak ${sslConfFile}` : 'true',
+          // Re-enable SSL site if it was enabled
+          hasSSlBackup && fs.existsSync(sslEnabledFile) ? `sudo a2ensite ${site}-le-ssl.conf` : 'true',
+          `sudo apache2ctl configtest`,
+          `sudo systemctl reload apache2`
+        ].join(' && ');
+      } else {
+        // Enter maintenance mode
+        // Create maintenance page if doesn't exist
+        const maintenanceHTML = '<!DOCTYPE html><html><head><title>Under Maintenance</title><style>body{font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f5f5f5}div{text-align:center;padding:40px;background:white;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}h1{color:#ff6b6b;margin:0 0 20px}p{color:#666}</style></head><body><div><h1>⚠️ Under Maintenance</h1><p>This site is temporarily unavailable. Please check back soon.</p></div></body></html>';
+        
+        // Read original config to get ServerName
+        let serverName = site;
+        try {
+          const configContent = fs.readFileSync(confFile, 'utf8');
+          const serverNameMatch = configContent.match(/ServerName\s+([^\s]+)/);
+          if (serverNameMatch) {
+            serverName = serverNameMatch[1];
+          }
+        } catch (e) {
+          console.warn('Could not read ServerName from config', e);
+        }
+        
+        const maintenanceConfHTTP = `<VirtualHost *:80>
+    ServerName ${serverName}
+    DocumentRoot /var/www/html/maintenance
+    <Directory /var/www/html/maintenance>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    ErrorLog \${APACHE_LOG_DIR}/${site}-maintenance-error.log
+    CustomLog \${APACHE_LOG_DIR}/${site}-maintenance-access.log combined
+</VirtualHost>`;
+
+        const maintenanceConfHTTPS = `<IfModule mod_ssl.c>
+<VirtualHost *:443>
+    ServerName ${serverName}
+    DocumentRoot /var/www/html/maintenance
+    <Directory /var/www/html/maintenance>
+        Options -Indexes +FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    ErrorLog \${APACHE_LOG_DIR}/${site}-maintenance-error.log
+    CustomLog \${APACHE_LOG_DIR}/${site}-maintenance-access.log combined
+    
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/${serverName}/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/${serverName}/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
+</IfModule>`;
+
+        const sslConfFile = `/etc/apache2/sites-available/${site}-le-ssl.conf`;
+        const hasSSL = fs.existsSync(sslConfFile);
+        
+        cmd = [
+          // Create maintenance directory and page
+          `sudo mkdir -p /var/www/html/maintenance`,
+          `echo '${maintenanceHTML}' | sudo tee /var/www/html/maintenance/index.html`,
+          // Backup HTTP config
+          `sudo cp ${confFile} ${confFile}.bak`,
+          // Backup HTTPS config if exists
+          hasSSL ? `sudo cp ${sslConfFile} ${sslConfFile}.bak` : 'true',
+          // Replace with maintenance configs
+          `echo '${maintenanceConfHTTP}' | sudo tee ${confFile}`,
+          hasSSL ? `echo '${maintenanceConfHTTPS}' | sudo tee ${sslConfFile}` : 'true',
+          `sudo apache2ctl configtest`,
+          `sudo systemctl reload apache2`
+        ].join(' && ');
+      }
     } else {
       return res.status(400).json({ success: false, error: 'Invalid action' });
     }
@@ -84,19 +150,29 @@ router.post('/', (req, res) => {
       // After action completes, emit updated sites list
       setTimeout(() => {
         try {
+          const availableDir = '/etc/apache2/sites-available';
           const availableSites = fs
-            .readdirSync('/etc/apache2/sites-available')
+            .readdirSync(availableDir)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           const enabledSites = fs
             .readdirSync('/etc/apache2/sites-enabled')
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
-          const sites = availableSites.map((s) => ({ 
-            name: s, 
-            domain: s, 
-            status: enabledSites.includes(s) ? 'enabled' : 'disabled' 
-          }));
+          
+          const sites = availableSites
+            .filter(site => !site.endsWith('-le-ssl'))
+            .map((s) => {
+              const sslConfPath = path.join(availableDir, `${s}-le-ssl.conf`);
+              const hasSSL = fs.existsSync(sslConfPath);
+              
+              return { 
+                name: s, 
+                domain: s, 
+                status: enabledSites.includes(s) ? 'enabled' : 'disabled',
+                ssl: hasSSL
+              };
+            });
           io.emit('sites:updated', sites);
         } catch (e) {
           console.warn('Failed to emit sites update', e);
@@ -124,11 +200,46 @@ router.get('/', (req, res) => {
       .filter((f) => f.endsWith('.conf'))
       .map((f) => f.replace('.conf', ''));
 
-    const sites = availableSites.map((site) => ({
-      name: site,
-      domain: site,
-      status: enabledSites.includes(site) ? 'enabled' : 'disabled',
-    }));
+    // Parse config files to extract actual domain and SSL info
+    const sites = availableSites
+      .filter(site => !site.endsWith('-le-ssl')) // Skip SSL-specific files, we'll detect them
+      .map((site) => {
+        const confPath = path.join(availableDir, `${site}.conf`);
+        const sslConfPath = path.join(availableDir, `${site}-le-ssl.conf`);
+        
+        let domain = site;
+        let hasSSL = false;
+        
+        // Read config to extract ServerName
+        try {
+          const configContent = fs.readFileSync(confPath, 'utf8');
+          const serverNameMatch = configContent.match(/ServerName\s+([^\s]+)/);
+          if (serverNameMatch) {
+            domain = serverNameMatch[1].replace('.local', '');
+          }
+        } catch (e) {
+          console.warn(`Could not read config for ${site}`, e);
+        }
+        
+        // Check if SSL config exists
+        if (fs.existsSync(sslConfPath)) {
+          hasSSL = true;
+        }
+        
+        // Check if in maintenance mode
+        const isInMaintenance = fs.existsSync(`${confPath}.bak`);
+        let status = 'disabled';
+        if (enabledSites.includes(site)) {
+          status = isInMaintenance ? 'maintenance' : 'enabled';
+        }
+        
+        return {
+          name: site,
+          domain: domain,
+          status: status,
+          ssl: hasSSL
+        };
+      });
 
     res.json({ success: true, sites });
   } catch (err) {
@@ -394,7 +505,22 @@ router.post('/create-advanced', async (req, res) => {
         });
       });
 
-      // Step 7: Install SSL if requested
+      // Step 7: Create backup files for maintenance mode
+      const backupCmd = [
+        `sudo cp ${confFile} ${confFile}.bak.initial`,
+        `sudo chmod 644 ${confFile}.bak.initial`
+      ].join(' && ');
+      
+      await new Promise((resolve) => {
+        exec(backupCmd, (err) => {
+          if (err) {
+            console.warn('Failed to create initial backup', err);
+          }
+          resolve();
+        });
+      });
+
+      // Step 8: Install SSL if requested
       let sslStatus = 'disabled';
       if (enableSSL === 'true' || enableSSL === true) {
         try {
@@ -413,6 +539,18 @@ router.post('/create-advanced', async (req, res) => {
             });
           });
 
+          // Create backup of SSL config too
+          if (sslStatus === 'enabled') {
+            const sslConfFile = `/etc/apache2/sites-available/${fullDomain}-le-ssl.conf`;
+            if (fs.existsSync(sslConfFile)) {
+              exec(`sudo cp ${sslConfFile} ${sslConfFile}.bak.initial`, (err) => {
+                if (err) {
+                  console.warn('Failed to create SSL backup', err);
+                }
+              });
+            }
+          }
+
           // Setup auto-renewal if requested
           if ((autoRenewSSL === 'true' || autoRenewSSL === true) && sslStatus === 'enabled') {
             exec('sudo certbot renew --dry-run', (err) => {
@@ -430,20 +568,29 @@ router.post('/create-advanced', async (req, res) => {
       // Update sites list via socket
       setTimeout(() => {
         try {
+          const availableDir = '/etc/apache2/sites-available';
           const availableSites = fs
-            .readdirSync('/etc/apache2/sites-available')
+            .readdirSync(availableDir)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           const enabledSites = fs
             .readdirSync('/etc/apache2/sites-enabled')
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
-          const sites = availableSites.map((s) => ({ 
-            name: s, 
-            domain: s, 
-            status: enabledSites.includes(s) ? 'enabled' : 'disabled',
-            ssl: sslStatus === 'enabled'
-          }));
+          
+          const sites = availableSites
+            .filter(site => !site.endsWith('-le-ssl'))
+            .map((s) => {
+              const sslConfPath = path.join(availableDir, `${s}-le-ssl.conf`);
+              const hasSSL = fs.existsSync(sslConfPath);
+              
+              return { 
+                name: s, 
+                domain: s, 
+                status: enabledSites.includes(s) ? 'enabled' : 'disabled',
+                ssl: hasSSL
+              };
+            });
           io.emit('sites:updated', sites);
         } catch (e) {
           console.warn('Failed to emit sites update', e);

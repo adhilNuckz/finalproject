@@ -81,9 +81,8 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
     }
   };
 
-  const openSite = (site, e) => {
+  const openSite = (site, protocol, e) => {
     e.stopPropagation();
-    const protocol = site.ssl ? 'https' : 'http';
     window.open(`${protocol}://${site.domain}`, '_blank');
   };
 
@@ -114,14 +113,38 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
             
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <button 
-                  onClick={(e) => openSite(site, e)} 
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors flex items-center"
-                  title="View Site"
-                >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  View Site
-                </button>
+                {/* Protocol Selector Dropdown */}
+                <div className="relative">
+                  <button 
+                    onClick={(e) => openSite(site, 'http', e)} 
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-l-md transition-colors flex items-center"
+                    title="Open with HTTP"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    HTTP
+                  </button>
+                  {site.ssl && (
+                    <button 
+                      onClick={(e) => openSite(site, 'https', e)} 
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-r-md transition-colors flex items-center border-l border-green-500"
+                      title="Open with HTTPS"
+                    >
+                      <Lock className="w-3 h-3 mr-1" />
+                      HTTPS
+                    </button>
+                  )}
+                  {!site.ssl && (
+                    <button 
+                      onClick={(e) => openSite(site, 'http', e)} 
+                      className="px-3 py-1.5 bg-gray-400 text-white text-sm rounded-r-md cursor-not-allowed flex items-center border-l border-gray-300"
+                      title="HTTPS not available - Install SSL first"
+                      disabled
+                    >
+                      <Lock className="w-3 h-3 mr-1" />
+                      HTTPS
+                    </button>
+                  )}
+                </div>
                 
                 {!site.ssl && (
                   <button 
@@ -137,7 +160,7 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
                       </>
                     ) : (
                       <>
-                        <Lock className="w-3 h-3 mr-1" />
+                        <Shield className="w-3 h-3 mr-1" />
                         Add SSL
                       </>
                     )}
@@ -147,11 +170,11 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
               
               <div className="flex items-center space-x-1">
                 <button 
-                  onClick={(e) => { e.stopPropagation(); handleAction(site, site.status === 'online' ? 'stop' : 'start'); }} 
-                  className={`p-1.5 rounded-md transition-colors ${site.status === 'online' ? 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
-                  title={site.status === 'online' ? 'Stop' : 'Start'}
+                  onClick={(e) => { e.stopPropagation(); handleAction(site, (site.status === 'online' || site.status === 'maintenance') ? 'stop' : 'start'); }} 
+                  className={`p-1.5 rounded-md transition-colors ${(site.status === 'online' || site.status === 'maintenance') ? 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                  title={(site.status === 'online' || site.status === 'maintenance') ? 'Pause (Maintenance Mode)' : 'Play (Resume Site)'}
                 >
-                  {site.status === 'online' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {(site.status === 'online' || site.status === 'maintenance') ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleAction(site, 'restart'); }} 
