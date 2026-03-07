@@ -12,8 +12,7 @@ import {
   Trash2,
   Check
 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:5000';
+import { API_BASE_URL as API_BASE } from '../../config.js';
 
 export default function AddSiteModal({ onClose, onCreated, isServerInterface = false }) {
   const [step, setStep] = useState(1);

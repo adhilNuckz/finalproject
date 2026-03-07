@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import FileTree from './FileTree.jsx';
 import FileEditor from './FileEditor.jsx';
 import FileToolbar from './FileToolbar.jsx';
-
-const API_BASE = 'http://localhost:5000';
+import { API_BASE_URL as API_BASE } from '../../config.js';
 
 function mapEntriesToTree(entries, parentPath) {
   return entries.map((e, idx) => ({
