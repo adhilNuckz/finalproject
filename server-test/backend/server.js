@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -16,6 +15,7 @@ const pm2Routes = require('./routes/pm2');
 const filesRoutes = require('./routes/files');
 const serverRoutes = require('./routes/server');
 const sitesRoutes = require('./routes/sites');
+const projectsRoutes = require('./routes/projects');
 
 // Import utilities
 const { isAllowedPath } = require('./utils/security');
@@ -138,6 +138,9 @@ app.use('/server', serverRoutes);
 // Site management routes
 app.use('/sites', sitesRoutes);
 app.use('/site', sitesRoutes);
+
+// Project management routes
+app.use('/projects', projectsRoutes);
 
 // ==================== Legacy Endpoints ====================
 
@@ -272,10 +275,9 @@ app.use((err, req, res, next) => {
 // ==================== Start Server ====================
 
 const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || '0.0.0.0';
 
-server.listen(PORT, HOST, () => {
-  console.log(`Backend server running on http://${HOST}:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Backend server running on http://localhost:${PORT}`);
   console.log('Socket.IO enabled for real-time updates');
   console.log('Route modules loaded successfully');
 });

@@ -55,16 +55,23 @@ io.on("connection", (socket) => {
   terminalSessions.set(socket.id, sessions);
 
   // Create a new terminal session
-  socket.on("create-session", ({ sessionId }) => {
-    console.log(`Creating session: ${sessionId}`);
+  socket.on("create-session", ({ sessionId, cwd }) => {
+    console.log(`Creating session: ${sessionId}${cwd ? ` (cwd: ${cwd})` : ''}`);
+    
+    const sessionCwd = cwd || process.env.HOME;
     
     const shell = spawn("bash", [], {
       name: "xterm-color",
       cols: 80,
       rows: 30,
-      cwd: process.env.HOME,
-      env: process.env,
+      cwd: sessionCwd,
+      env: { ...process.env, HOME: process.env.HOME },
     });
+
+    // Force cd into the target directory in case .bashrc overrides cwd
+    if (cwd) {
+      shell.write(`cd ${cwd}\r`);
+    }
 
     // Store session
     sessions.set(sessionId, shell);

@@ -1,8 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, Globe, FolderOpen, Terminal, Brain, Server, Activity, Settings } from 'lucide-react';
+import { LayoutDashboard, Globe, FolderOpen, Terminal, Brain, Server, Activity, Settings, FolderGit2 } from 'lucide-react';
 
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+  { id: 'projects', name: 'Projects', icon: FolderGit2 },
   { id: 'apache-config', name: 'Apache Config', icon: Settings },
   { id: 'sites', name: 'Sites', icon: Globe },
   { id: 'files', name: 'Files', icon: FolderOpen },

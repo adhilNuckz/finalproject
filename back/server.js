@@ -15,6 +15,7 @@ const pm2Routes = require('./routes/pm2');
 const filesRoutes = require('./routes/files');
 const serverRoutes = require('./routes/server');
 const sitesRoutes = require('./routes/sites');
+const projectsRoutes = require('./routes/projects');
 
 // Import utilities
 const { isAllowedPath } = require('./utils/security');
@@ -137,6 +138,9 @@ app.use('/server', serverRoutes);
 // Site management routes
 app.use('/sites', sitesRoutes);
 app.use('/site', sitesRoutes);
+
+// Project management routes
+app.use('/projects', projectsRoutes);
 
 // ==================== Legacy Endpoints ====================
 

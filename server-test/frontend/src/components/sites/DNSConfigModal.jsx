@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Globe, Server, Copy, Check, AlertCircle, ExternalLink } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
 
-const API_BASE = API_BASE_URL;
+const API_BASE = 'http://localhost:5000';
 
 export default function DNSConfigModal({ domain, onClose }) {
   const [serverIP, setServerIP] = useState('Loading...');

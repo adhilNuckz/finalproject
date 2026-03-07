@@ -10,6 +10,7 @@ import PM2Manager from './components/pm2/PM2Manager.jsx';
 import ApacheConfig from './components/apache/ApacheConfig.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import AIInsights from './components/ai/AIInsights.jsx';
+import Projects from './components/projects/Projects.jsx';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -19,6 +20,8 @@ function AppContent() {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard />;
+      case 'projects':
+        return <Projects />;
       case 'sites':
         return <Sites />;
       case 'files':

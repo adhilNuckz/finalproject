@@ -5,7 +5,6 @@ import QuickActions from './QuickActions.jsx';
 import SystemAlerts from './SystemAlerts.jsx';
 import AddSiteModal from '../sites/AddSiteModal.jsx';
 import { Server } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
 
 export default function Dashboard() {
   const [serverIp, setServerIp] = useState('Loading...');
@@ -17,7 +16,7 @@ export default function Dashboard() {
 
   const fetchServerIp = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/server/ip`);
+      const response = await fetch('http://localhost:5000/server/ip');
       const data = await response.json();
       if (data.success) {
         setServerIp(data.ip);

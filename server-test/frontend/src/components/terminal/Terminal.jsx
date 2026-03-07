@@ -5,9 +5,8 @@ import { WebLinksAddon } from "xterm-addon-web-links";
 import { Plus, X, Download } from "lucide-react";
 import io from "socket.io-client";
 import "xterm/css/xterm.css";
-import { TERMINAL_URL } from '../../config';
 
-const SOCKET_SERVER_URL = TERMINAL_URL;
+const SOCKET_SERVER_URL = "http://localhost:3000";
 
 export default function Terminal() {
   const [sessions, setSessions] = useState([]);

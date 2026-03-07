@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -11,16 +10,13 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
-
-// Allow origins from environment variable or defaults
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : [
-      'http://127.0.0.1:5173',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000'
-    ];
+// Allow local dev origins (Vite dev server + localhost)
+const allowedOrigins = [
+  'http://127.0.0.1:5173',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
 
 
 
@@ -59,16 +55,23 @@ io.on("connection", (socket) => {
   terminalSessions.set(socket.id, sessions);
 
   // Create a new terminal session
-  socket.on("create-session", ({ sessionId }) => {
-    console.log(`Creating session: ${sessionId}`);
+  socket.on("create-session", ({ sessionId, cwd }) => {
+    console.log(`Creating session: ${sessionId}${cwd ? ` (cwd: ${cwd})` : ''}`);
+    
+    const sessionCwd = cwd || process.env.HOME;
     
     const shell = spawn("bash", [], {
       name: "xterm-color",
       cols: 80,
       rows: 30,
-      cwd: process.env.HOME,
-      env: process.env,
+      cwd: sessionCwd,
+      env: { ...process.env, HOME: process.env.HOME },
     });
+
+    // Force cd into the target directory in case .bashrc overrides cwd
+    if (cwd) {
+      shell.write(`cd ${cwd}\r`);
+    }
 
     // Store session
     sessions.set(sessionId, shell);
@@ -142,9 +145,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
-
-server.listen(PORT, HOST, () =>
-  console.log(`🚀 Terminal server running at http://${HOST}:${PORT}`)
+const PORT = 3000;
+server.listen(PORT, () =>
+  console.log(`🚀 Server running at http://localhost:${PORT}`)
 );
