@@ -17,6 +17,10 @@ coverage/
 /.pnp
 /.pnp.js
 
+# Sensitive/local data files
+github-auth.json
+projects.json
+
 # Ignore uploads (project had uploads folder)
 front/uploads/
 back/uploads/
