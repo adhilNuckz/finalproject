@@ -19,7 +19,7 @@ export default function PM2Manager() {
   const [directoryContents, setDirectoryContents] = useState([]);
   const [directoryLoading, setDirectoryLoading] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = 'http://localhost:5000';
 
   useEffect(() => {
     fetchProcesses();
@@ -232,16 +232,16 @@ export default function PM2Manager() {
     const base = "px-2 py-1 text-xs font-medium rounded-full";
     switch (status) {
       case 'online':
-        return `${base} bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400`;
+        return `${base} bg-green-900/30 text-green-400`;
       case 'stopped':
-        return `${base} bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400`;
+        return `${base} bg-red-900/30 text-red-400`;
       case 'stopping':
       case 'launching':
-        return `${base} bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400`;
+        return `${base} bg-yellow-900/30 text-yellow-400`;
       case 'errored':
-        return `${base} bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400`;
+        return `${base} bg-red-900/30 text-red-400`;
       default:
-        return `${base} bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400`;
+        return `${base} bg-[#1a1a1a] bg-[#0e0e0e]/30 text-gray-200 text-gray-500`;
     }
   };
 
@@ -265,8 +265,8 @@ export default function PM2Manager() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-6">
+        <div className="text-center py-8 text-gray-500">
           Loading PM2 processes...
         </div>
       </div>
@@ -275,13 +275,13 @@ export default function PM2Manager() {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-6">
         <div className="text-center py-8">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <p className="text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-red-600">{error}</p>
           <button
             onClick={fetchProcesses}
-            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="mt-4 px-4 py-2 bg-lava-600 hover:bg-lava-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             Retry
           </button>
@@ -292,9 +292,9 @@ export default function PM2Manager() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">PM2 Process Manager</h2>
+          <h2 className="text-2xl font-bold text-gray-100">PM2 Process Manager</h2>
           <div className="flex space-x-2">
             <button
               onClick={() => setShowAddModal(true)}
@@ -305,7 +305,7 @@ export default function PM2Manager() {
             </button>
             <button
               onClick={fetchProcesses}
-              className="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center px-3 py-2 bg-lava-600 hover:bg-lava-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               <RefreshCw className="w-4 h-4 mr-1" />
               Refresh
@@ -316,39 +316,39 @@ export default function PM2Manager() {
         {processes.length === 0 ? (
           <div className="text-center py-8">
             <Play className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">No PM2 processes running</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">Start managing your Node.js applications with PM2</p>
+            <p className="text-gray-500 mb-2">No PM2 processes running</p>
+            <p className="text-sm text-gray-400">Start managing your Node.js applications with PM2</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">ID</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Name</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">CPU</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Memory</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Uptime</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Restarts</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                <tr className="border-b border-[#1f1f1f]">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">ID</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Name</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Status</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">CPU</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Memory</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Uptime</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Restarts</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {processes.map((proc) => (
                   <tr
                     key={proc.pm_id}
-                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="border-b border-gray-100 border-[#1f1f1f] hover:bg-[#1a1a1a]/50 transition-colors"
                   >
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-mono">
+                    <td className="py-3 px-4 text-sm text-gray-100 font-mono">
                       {proc.pm_id}
                     </td>
                     <td className="py-3 px-4">
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        <p className="text-sm font-medium text-gray-100">
                           {proc.name}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                        <p className="text-xs text-gray-500 truncate max-w-xs">
                           {proc.pm2_env?.pm_cwd || 'N/A'}
                         </p>
                       </div>
@@ -361,16 +361,16 @@ export default function PM2Manager() {
                         {getStatusIcon(proc.pm2_env?.status)}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-gray-100">
                       {proc.monit?.cpu || 0}%
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-gray-100">
                       {formatMemory(proc.monit?.memory)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-gray-100">
                       {formatUptime(proc.pm2_env?.pm_uptime)}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                    <td className="py-3 px-4 text-sm text-gray-100">
                       {proc.pm2_env?.restart_time || 0}
                     </td>
                     <td className="py-3 px-4">
@@ -380,7 +380,7 @@ export default function PM2Manager() {
                             <button
                               onClick={() => handleAction('reload', proc.pm_id, proc.name)}
                               disabled={actionLoading[`${proc.pm_id}-reload`]}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50"
+                              className="p-1.5 text-lava-500 hover:bg-lava-900/20 rounded transition-colors disabled:opacity-50"
                               title="Reload"
                             >
                               {actionLoading[`${proc.pm_id}-reload`] ? (
@@ -392,7 +392,7 @@ export default function PM2Manager() {
                             <button
                               onClick={() => handleAction('stop', proc.pm_id, proc.name)}
                               disabled={actionLoading[`${proc.pm_id}-stop`]}
-                              className="p-1.5 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded transition-colors disabled:opacity-50"
+                              className="p-1.5 text-orange-600 hover:bg-orange-900/20 rounded transition-colors disabled:opacity-50"
                               title="Stop"
                             >
                               {actionLoading[`${proc.pm_id}-stop`] ? (
@@ -406,7 +406,7 @@ export default function PM2Manager() {
                           <button
                             onClick={() => handleAction('restart', proc.pm_id, proc.name)}
                             disabled={actionLoading[`${proc.pm_id}-restart`]}
-                            className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors disabled:opacity-50"
+                            className="p-1.5 text-green-600 hover:bg-green-900/20 rounded transition-colors disabled:opacity-50"
                             title="Start"
                           >
                             {actionLoading[`${proc.pm_id}-restart`] ? (
@@ -423,7 +423,7 @@ export default function PM2Manager() {
                             }
                           }}
                           disabled={actionLoading[`${proc.pm_id}-delete`]}
-                          className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
+                          className="p-1.5 text-red-400 hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
                           title="Delete"
                         >
                           {actionLoading[`${proc.pm_id}-delete`] ? (
@@ -445,16 +445,16 @@ export default function PM2Manager() {
       {/* Add Process Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6">
+          <div className="bg-[#141414] rounded-xl shadow-xl max-w-lg w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Add PM2 Process</h3>
+              <h3 className="text-xl font-semibold text-gray-100">Add PM2 Process</h3>
               <button
                 onClick={() => {
                   setShowAddModal(false);
                   setNewProcess({ name: '', script: '', cwd: '' });
                   setAddError('');
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-gray-400 hover:text-gray-400"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -463,7 +463,7 @@ export default function PM2Manager() {
             <form onSubmit={handleAddProcess}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Process Name *
                   </label>
                   <input
@@ -471,16 +471,16 @@ export default function PM2Manager() {
                     value={newProcess.name}
                     onChange={(e) => setNewProcess({ ...newProcess, name: e.target.value })}
                     placeholder="my-app"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 border border-[#252525] rounded-lg focus:ring-2 focus:ring-lava-500 focus:border-transparent bg-[#1a1a1a] text-gray-100"
                     disabled={addLoading}
                   />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-xs text-gray-500">
                     Unique name for your PM2 process
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Script/Command *
                   </label>
                   <input
@@ -488,19 +488,19 @@ export default function PM2Manager() {
                     value={newProcess.script}
                     onChange={(e) => setNewProcess({ ...newProcess, script: e.target.value })}
                     placeholder="server.js or npm start"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 border border-[#252525] rounded-lg focus:ring-2 focus:ring-lava-500 focus:border-transparent bg-[#1a1a1a] text-gray-100"
                     disabled={addLoading}
                   />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-xs text-gray-500">
                     Just the script file or command (e.g., server.js, app.js, npm start)
                   </p>
-                  <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
+                  <p className="mt-1 text-xs text-yellow-600">
                     ⚠️ Do NOT include "pm2 start" - just enter the script name!
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Working Directory (Optional)
                   </label>
                   <div className="flex space-x-2">
@@ -511,14 +511,14 @@ export default function PM2Manager() {
                         value={newProcess.cwd}
                         onChange={(e) => setNewProcess({ ...newProcess, cwd: e.target.value })}
                         placeholder="/path/to/project"
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full pl-10 pr-4 py-2 border border-[#252525] rounded-lg focus:ring-2 focus:ring-lava-500 focus:border-transparent bg-[#1a1a1a] text-gray-100"
                         disabled={addLoading}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={openDirectoryBrowser}
-                      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center"
+                      className="px-4 py-2 bg-gray-600 hover:bg-[#1a1a1a] text-white text-sm font-medium rounded-lg transition-colors flex items-center"
                       disabled={addLoading}
                       title="Browse server directories"
                     >
@@ -526,21 +526,21 @@ export default function PM2Manager() {
                       Browse
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-xs text-gray-500">
                     Directory where the script is located (leave empty for current directory)
                   </p>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                  <p className="text-xs text-blue-800 dark:text-blue-400">
+                <div className="bg-lava-900/20 bg-lava-900/20 border border-lava-600/30 rounded-lg p-3">
+                  <p className="text-xs text-lava-300">
                     <strong>Example:</strong> Name: "backend", Script: "server.js", Directory: "/home/kali/LOCALED/back"
                   </p>
                 </div>
               </div>
 
               {addError && (
-                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400">{addError}</p>
+                <div className="mt-4 p-3 bg-red-900/20 border border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600">{addError}</p>
                 </div>
               )}
 
@@ -552,7 +552,7 @@ export default function PM2Manager() {
                     setNewProcess({ name: '', script: '', cwd: '' });
                     setAddError('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 px-4 py-2 border border-[#252525] text-gray-300 rounded-lg hover:bg-[#1a1a1a] transition-colors"
                   disabled={addLoading}
                 >
                   Cancel
@@ -573,20 +573,20 @@ export default function PM2Manager() {
       {/* Directory Browser Modal */}
       {showDirectoryBrowser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full p-6">
+          <div className="bg-[#141414] rounded-xl shadow-xl max-w-2xl w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Browse Server Directories</h3>
+              <h3 className="text-xl font-semibold text-gray-100">Browse Server Directories</h3>
               <button
                 onClick={() => setShowDirectoryBrowser(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-gray-400 hover:text-gray-400"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Current Path Display */}
-            <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+            <div className="mb-4 p-3 bg-[#1a1a1a] rounded-lg">
+              <div className="flex items-center text-sm text-gray-300">
                 <Home className="w-4 h-4 mr-2" />
                 <span className="font-mono">{currentPath}</span>
               </div>
@@ -599,42 +599,42 @@ export default function PM2Manager() {
                   const parentPath = currentPath.split('/').slice(0, -1).join('/') || '/';
                   navigateToDirectory(parentPath);
                 }}
-                className="w-full mb-2 px-4 py-2 text-left flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="w-full mb-2 px-4 py-2 text-left flex items-center space-x-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
               >
                 <Folder className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">..</span>
+                <span className="text-sm text-gray-400">..</span>
               </button>
             )}
 
             {/* Directory List */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-96 overflow-y-auto">
+            <div className="border border-[#1f1f1f] rounded-lg max-h-96 overflow-y-auto">
               {directoryLoading ? (
                 <div className="p-8 text-center">
-                  <Loader className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Loading directories...</p>
+                  <Loader className="w-8 h-8 animate-spin text-lava-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Loading directories...</p>
                 </div>
               ) : directoryContents.length === 0 ? (
-                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                  <Folder className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                <div className="p-8 text-center text-gray-500">
+                  <Folder className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                   <p className="text-sm">No subdirectories found</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="divide-y divide-[#1f1f1f]">
                   {directoryContents.map((item) => (
                     <div
                       key={item.path}
-                      className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      className="flex items-center justify-between px-4 py-3 hover:bg-[#1a1a1a]/50 transition-colors"
                     >
                       <button
                         onClick={() => navigateToDirectory(item.path)}
                         className="flex items-center space-x-3 flex-1 text-left"
                       >
-                        <Folder className="w-5 h-5 text-blue-500" />
-                        <span className="text-sm text-gray-900 dark:text-white">{item.name}</span>
+                        <Folder className="w-5 h-5 text-lava-400" />
+                        <span className="text-sm text-gray-100">{item.name}</span>
                       </button>
                       <button
                         onClick={() => selectDirectory(item.path)}
-                        className="ml-4 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+                        className="ml-4 px-3 py-1 bg-lava-600 hover:bg-lava-700 text-white text-xs font-medium rounded transition-colors"
                       >
                         Select
                       </button>
@@ -645,7 +645,7 @@ export default function PM2Manager() {
             </div>
 
             {/* Footer Actions */}
-            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center mt-4 pt-4 border-t border-[#1f1f1f]">
               <button
                 onClick={() => selectDirectory(currentPath)}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -654,7 +654,7 @@ export default function PM2Manager() {
               </button>
               <button
                 onClick={() => setShowDirectoryBrowser(false)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 border border-[#252525] text-gray-300 rounded-lg hover:bg-[#1a1a1a] transition-colors"
               >
                 Cancel
               </button>

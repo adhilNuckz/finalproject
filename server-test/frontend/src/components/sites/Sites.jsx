@@ -3,7 +3,9 @@ import SitesList from './SitesList.jsx';
 import SiteDetails from './SiteDetails.jsx';
 import AddSiteModal from './AddSiteModal.jsx';
 import { Plus } from 'lucide-react';
-import { API_BASE_URL as API_BASE, SOCKET_URL } from '../../config.js';
+
+const API_BASE = 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:5000';
 
 export default function Sites() {
   const [sites, setSites] = useState([]);
@@ -101,8 +103,8 @@ export default function Sites() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sites & Domains</h1>
-        <button onClick={() => setShowAddModal(true)} className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"><Plus className="w-5 h-5 mr-2" />Add New Site</button>
+        <h1 className="text-2xl font-bold text-gray-100">Sites & Domains</h1>
+        <button onClick={() => setShowAddModal(true)} className="flex items-center px-4 py-2 bg-lava-600 hover:bg-lava-700 text-white font-medium rounded-lg transition-colors"><Plus className="w-5 h-5 mr-2" />Add New Site</button>
       </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -111,7 +113,7 @@ export default function Sites() {
             <SitesList sites={sites} selectedSite={sites.find(s => s.id === selectedSiteId) || null} onSiteSelect={(site) => setSelectedSiteId(site?.id ?? null)} onSiteUpdate={handleSiteUpdate} onSiteAction={handleSiteAction} loading={loading} />
           </div>
           <div>
-            { (sites.find(s => s.id === selectedSiteId)) ? <SiteDetails site={sites.find(s => s.id === selectedSiteId)} onSiteUpdate={handleSiteUpdate} /> : <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center"><p className="text-gray-500 dark:text-gray-400">Select a site to view details</p></div>}
+            { (sites.find(s => s.id === selectedSiteId)) ? <SiteDetails site={sites.find(s => s.id === selectedSiteId)} onSiteUpdate={handleSiteUpdate} /> : <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-8 text-center"><p className="text-gray-500">Select a site to view details</p></div>}
           </div>
         </div>
 
@@ -119,7 +121,7 @@ export default function Sites() {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium">Live Action Output</h4>
-            <div className="flex items-center space-x-2"><button onClick={() => setLiveLog([])} className="px-2 py-1 text-xs bg-gray-100 rounded">Clear</button></div>
+            <div className="flex items-center space-x-2"><button onClick={() => setLiveLog([])} className="px-2 py-1 text-xs bg-[#1a1a1a] rounded">Clear</button></div>
           </div>
           <div className="bg-black text-green-400 font-mono text-sm p-3 rounded h-40 overflow-auto">
             {liveLog.length === 0 ? <div className="text-gray-400">No live output</div> : liveLog.map((line, i) => (<div key={i}><span className="text-yellow-300">[{new Date(line.ts).toLocaleTimeString()}]</span> {line.type === 'stderr' ? <span className="text-red-400">{line.chunk}</span> : <span>{line.chunk}</span>}</div>))}

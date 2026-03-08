@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import FileTree from './FileTree.jsx';
 import FileEditor from './FileEditor.jsx';
 import FileToolbar from './FileToolbar.jsx';
-import { API_BASE_URL as API_BASE } from '../../config.js';
+
+const API_BASE = 'http://localhost:5000';
 
 function mapEntriesToTree(entries, parentPath) {
   return entries.map((e, idx) => ({
@@ -224,7 +225,7 @@ export default function FileManager() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">File Manager</h1>
+        <h1 className="text-2xl font-bold text-gray-100">File Manager</h1>
         <FileToolbar 
           selectedFile={selectedFile} 
           currentPath={currentPath}
@@ -236,33 +237,33 @@ export default function FileManager() {
           onRefresh={handleRefresh}
         />
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2">
+      <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] overflow-hidden">
+        <div className="p-3 border-b border-[#1f1f1f] space-y-2">
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1">
-              <button onClick={() => goToPath('/var/www/html')} className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">Web Root</button>
+              <button onClick={() => goToPath('/var/www/html')} className="text-xs px-2 py-1 bg-lava-900/30 bg-lava-900/30 text-lava-400 rounded hover:bg-blue-200 hover:bg-lava-900/40">Web Root</button>
               {homeDir && (
-                <button onClick={goToHome} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50">Home</button>
+                <button onClick={goToHome} className="text-xs px-2 py-1 bg-green-900/30 text-green-400 rounded hover:bg-green-200 hover:bg-green-900/40">Home</button>
               )}
             </div>
             <div className="flex-1" />
             <div className="flex items-center space-x-2">
-              <button onClick={navigateUp} className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-900 rounded hover:bg-gray-200 dark:hover:bg-gray-800">↑ Up</button>
-              <input value={pathInput} onChange={(e) => setPathInput(e.target.value)} className="text-sm px-2 py-1 rounded border dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
-              <button onClick={() => goToPath(pathInput)} className="text-sm px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">Go</button>
+              <button onClick={navigateUp} className="text-sm px-2 py-1 bg-[#1a1a1a] bg-[#0e0e0e] rounded hover:bg-[#1f1f1f]">↑ Up</button>
+              <input value={pathInput} onChange={(e) => setPathInput(e.target.value)} className="text-sm px-2 py-1 rounded border bg-[#0e0e0e] border-[#1f1f1f] text-gray-100" />
+              <button onClick={() => goToPath(pathInput)} className="text-sm px-2 py-1 bg-lava-600 hover:bg-lava-700 text-white rounded">Go</button>
             </div>
           </div>
           <div className="flex items-center space-x-1 overflow-x-auto">
             {breadcrumbs.map((b, i) => (
               <React.Fragment key={i}>
                 {i > 0 && <span className="text-gray-400">/</span>}
-                <button onClick={() => goToPath(b.path)} className="text-xs text-gray-600 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">{b.name || 'root'}</button>
+                <button onClick={() => goToPath(b.path)} className="text-xs text-gray-400 px-2 py-1 rounded hover:bg-[#1a1a1a] whitespace-nowrap">{b.name || 'root'}</button>
               </React.Fragment>
             ))}
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
-          <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="lg:col-span-1 border-r border-[#1f1f1f] overflow-hidden">
             <FileTree files={fileStructure} selectedFile={selectedFile} onFileSelect={handleFileSelect} onFolderNavigate={(p) => goToPath(p)} />
           </div>
           <div className="lg:col-span-2 overflow-hidden">

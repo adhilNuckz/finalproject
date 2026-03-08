@@ -12,7 +12,8 @@ import {
   Trash2,
   Check
 } from 'lucide-react';
-import { API_BASE_URL as API_BASE } from '../../config.js';
+
+const API_BASE = 'http://localhost:5000';
 
 export default function AddSiteModal({ onClose, onCreated, isServerInterface = false }) {
   const [step, setStep] = useState(1);
@@ -158,6 +159,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
       if (formData.uploadMethod === 'local') {
         formData.localFiles.forEach(file => {
           fd.append('files', file);
+          // Send relative path so backend can reconstruct folder structure
           fd.append('relativePaths', file.webkitRelativePath || file.name);
         });
       } else {
@@ -212,12 +214,12 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-[#141414] rounded-xl shadow-2xl shadow-black/40 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-[#1f1f1f]">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Site</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <h2 className="text-2xl font-bold text-gray-100">Add New Site</h2>
+            <p className="text-sm text-gray-500 mt-1">
               Step {step} of 4: {
                 step === 1 ? 'Domain Configuration' :
                 step === 2 ? 'File Upload' :
@@ -228,26 +230,26 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="flex items-center px-6 py-4 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center px-6 py-4 bg-[#111111]">
           {[1, 2, 3, 4].map((s) => (
             <React.Fragment key={s}>
               <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
                 s <= step 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+                  ? 'bg-lava-600 text-white' 
+                  : 'bg-[#252525] bg-[#1f1f1f] text-gray-400'
               }`}>
                 {s < step ? <Check className="w-5 h-5" /> : s}
               </div>
               {s < 4 && (
                 <div className={`flex-1 h-1 mx-2 ${
-                  s < step ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                  s < step ? 'bg-lava-600' : 'bg-[#252525] bg-[#1f1f1f]'
                 }`} />
               )}
             </React.Fragment>
@@ -260,7 +262,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
             <div className="space-y-6">
               {/* Domain Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 flex items-center">
+                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
                   <Globe className="w-4 h-4 mr-2" />
                   Select Domain
                 </label>
@@ -268,18 +270,18 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                   <select
                     value={formData.domain}
                     onChange={(e) => {
-                      const dom = e.target.value;
-                      setFormData(prev => {
-                        const prevAuto = `${prev.subdomain}.${prev.domain}`;
-                        const shouldAutoFill = !prev.folderName || prev.folderName === prevAuto;
-                        return {
-                          ...prev,
-                          domain: dom,
-                          folderName: shouldAutoFill && prev.subdomain && dom ? `${prev.subdomain}.${dom}` : prev.folderName
-                        };
-                      });
-                    }}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    const dom = e.target.value;
+                    setFormData(prev => {
+                      const prevAuto = `${prev.subdomain}.${prev.domain}`;
+                      const shouldAutoFill = !prev.folderName || prev.folderName === prevAuto;
+                      return {
+                        ...prev,
+                        domain: dom,
+                        folderName: shouldAutoFill && prev.subdomain && dom ? `${prev.subdomain}.${dom}` : prev.folderName
+                      };
+                    });
+                  }}
+                    className="flex-1 px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a] text-gray-100 focus:ring-2 focus:ring-lava-500"
                   >
                     <option value="">Choose a domain...</option>
                     {domains.map(d => (
@@ -289,7 +291,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                   <button
                     type="button"
                     onClick={() => setShowAddDomain(!showAddDomain)}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg transition-colors flex items-center"
+                    className="px-4 py-2 bg-[#1f1f1f] bg-[#1f1f1f] hover:bg-[#252525] hover:bg-[#252525] rounded-lg transition-colors flex items-center"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Domain
@@ -297,23 +299,23 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                 </div>
 
                 {showAddDomain && (
-                  <div className="mt-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="mt-3 p-4 bg-lava-900/20 bg-lava-900/20 border border-lava-600/30 rounded-lg">
                     <div className="flex space-x-2">
                       <input
                         type="text"
                         value={newDomain}
                         onChange={(e) => setNewDomain(e.target.value)}
                         placeholder="example.com"
-                        className="flex-1 px-4 py-2 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-700"
+                        className="flex-1 px-4 py-2 border border-lava-500/50 rounded-lg bg-[#1a1a1a]"
                       />
                       <button
                         onClick={addDomain}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        className="px-4 py-2 bg-lava-600 hover:bg-lava-700 text-white rounded-lg transition-colors"
                       >
                         Add
                       </button>
                     </div>
-                    <div className="mt-2 text-xs text-blue-700 dark:text-blue-300 flex items-start">
+                    <div className="mt-2 text-xs text-lava-400 flex items-start">
                       <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0 mt-0.5" />
                       <span>Make sure your domain's DNS A record points to your server IP before deploying.</span>
                     </div>
@@ -323,7 +325,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
 
               {/* Subdomain */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Subdomain
                 </label>
                 <div className="flex items-center space-x-2">
@@ -343,11 +345,11 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                       });
                     }}
                     placeholder="blog, app, api, www"
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="flex-1 px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a] text-gray-100"
                   />
-                  <span className="text-gray-500 dark:text-gray-400">.{formData.domain || 'domain.com'}</span>
+                  <span className="text-gray-500">.{formData.domain || 'domain.com'}</span>
                 </div>
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-gray-500">
                   Final URL: {formData.subdomain ? `${formData.subdomain}.${formData.domain || 'domain.com'}` : 'subdomain.domain.com'}
                 </p>
               </div>
@@ -358,7 +360,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
             <div className="space-y-6">
               {/* Upload Method Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-3">
                   Upload Method
                 </label>
                 <div className="grid grid-cols-2 gap-4">
@@ -367,16 +369,16 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     onClick={() => setFormData(prev => ({ ...prev, uploadMethod: 'local' }))}
                     className={`p-6 rounded-lg border-2 transition-all ${
                       formData.uploadMethod === 'local'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-300'
+                        ? 'border-lava-500 bg-lava-900/20 bg-lava-900/20'
+                        : 'border-[#252525] hover:border-lava-500/50'
                     }`}
                   >
                     <Upload className={`w-8 h-8 mx-auto mb-3 ${
-                      formData.uploadMethod === 'local' ? 'text-blue-600' : 'text-gray-400'
+                      formData.uploadMethod === 'local' ? 'text-lava-500' : 'text-gray-400'
                     }`} />
                     <div className="text-center">
-                      <p className="font-semibold text-gray-900 dark:text-white">Upload Local Files</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload from your computer</p>
+                      <p className="font-semibold text-gray-100">Upload Local Files</p>
+                      <p className="text-xs text-gray-500 mt-1">Upload from your computer</p>
                     </div>
                   </button>
 
@@ -388,16 +390,16 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     }}
                     className={`p-6 rounded-lg border-2 transition-all ${
                       formData.uploadMethod === 'server'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-300'
+                        ? 'border-lava-500 bg-lava-900/20 bg-lava-900/20'
+                        : 'border-[#252525] hover:border-lava-500/50'
                     }`}
                   >
                     <Server className={`w-8 h-8 mx-auto mb-3 ${
-                      formData.uploadMethod === 'server' ? 'text-blue-600' : 'text-gray-400'
+                      formData.uploadMethod === 'server' ? 'text-lava-500' : 'text-gray-400'
                     }`} />
                     <div className="text-center">
-                      <p className="font-semibold text-gray-900 dark:text-white">Use Server Files</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select from server directory</p>
+                      <p className="font-semibold text-gray-100">Use Server Files</p>
+                      <p className="text-xs text-gray-500 mt-1">Select from server directory</p>
                     </div>
                   </button>
                 </div>
@@ -406,6 +408,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
               {/* Local File Upload */}
               {formData.uploadMethod === 'local' && (
                 <div className="p-6 border-2 border-dashed border-[#252525] rounded-lg">
+                  {/* Hidden inputs: one for files, one for folders */}
                   <input
                     type="file"
                     multiple
@@ -474,19 +477,19 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
 
               {/* Server File Browser */}
               {formData.uploadMethod === 'server' && (
-                <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 dark:bg-gray-700 p-3 border-b border-gray-300 dark:border-gray-600">
+                <div className="border border-[#252525] rounded-lg overflow-hidden">
+                  <div className="bg-[#1a1a1a] p-3 border-b border-[#252525]">
                     <div className="flex items-center space-x-2">
                       <FolderOpen className="w-4 h-4 text-gray-500" />
                       <input
                         type="text"
                         value={currentServerPath}
                         onChange={(e) => setCurrentServerPath(e.target.value)}
-                        className="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                        className="flex-1 px-3 py-1 text-sm border border-[#252525] rounded bg-[#141414]"
                       />
                       <button
                         onClick={() => fetchServerFiles(currentServerPath)}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                        className="px-3 py-1 bg-lava-600 hover:bg-lava-700 text-white text-sm rounded"
                       >
                         Browse
                       </button>
@@ -494,7 +497,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                   </div>
                   <div className="p-4 max-h-64 overflow-y-auto">
                     {serverFiles.length === 0 ? (
-                      <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                      <p className="text-center text-gray-500 py-8">
                         No files found. Enter a path and click Browse.
                       </p>
                     ) : (
@@ -511,8 +514,8 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                                 setFormData(prev => ({ ...prev, serverPath: file.path }));
                               }
                             }}
-                            className={`w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center ${
-                              formData.serverPath === file.path ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                            className={`w-full text-left px-3 py-2 rounded hover:bg-[#1a1a1a] flex items-center ${
+                              formData.serverPath === file.path ? 'bg-lava-900/20 bg-lava-900/20' : ''
                             }`}
                           >
                             {file.isDirectory ? (
@@ -520,15 +523,15 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                             ) : (
                               <FileCode className="w-4 h-4 mr-2 text-gray-500" />
                             )}
-                            <span className="text-sm text-gray-700 dark:text-gray-200">{file.name}</span>
+                            <span className="text-sm text-gray-300">{file.name}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
                   {formData.serverPath && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 border-t border-blue-200 dark:border-blue-800">
-                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                    <div className="bg-lava-900/20 bg-lava-900/20 p-3 border-t border-lava-600/30">
+                      <p className="text-xs text-lava-400">
                         Selected: {formData.serverPath}
                       </p>
                     </div>
@@ -543,7 +546,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
               {/* Folder Configuration */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Folder Name
                   </label>
                   <input
@@ -551,11 +554,11 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     value={formData.folderName}
                     onChange={(e) => setFormData(prev => ({ ...prev, folderName: e.target.value }))}
                     placeholder="my-website"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                    className="w-full px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Folder Location
                   </label>
                   <input
@@ -563,25 +566,25 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     value={formData.folderLocation}
                     onChange={(e) => setFormData(prev => ({ ...prev, folderLocation: e.target.value }))}
                     placeholder="/var/www/html"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                    className="w-full px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a]"
                   />
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500">
                 Full path: {formData.folderLocation}/{formData.folderName}
               </p>
 
               {/* Main File */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Main File (Entry Point)
                 </label>
                 {formData.uploadMethod === 'local' && formData.localFiles.length > 0 ? (
                   <select
                     value={formData.mainFile}
                     onChange={(e) => setFormData(prev => ({ ...prev, mainFile: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                    className="w-full px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a]"
                   >
                     {formData.localFiles.map((file, idx) => {
                       const relPath = file.webkitRelativePath || file.name;
@@ -594,20 +597,20 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     value={formData.mainFile}
                     onChange={(e) => setFormData(prev => ({ ...prev, mainFile: e.target.value }))}
                     placeholder="index.html"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                    className="w-full px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a]"
                   />
                 )}
               </div>
 
               {/* PHP Version */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   PHP Version
                 </label>
                 <select
                   value={formData.phpVersion}
                   onChange={(e) => setFormData(prev => ({ ...prev, phpVersion: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                  className="w-full px-4 py-2 border border-[#252525] rounded-lg bg-[#1a1a1a]"
                 >
                   <option value="none">No PHP</option>
                   <option value="7.4">PHP 7.4</option>
@@ -618,16 +621,16 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
               </div>
 
               {/* API Routes Configuration */}
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+              <div className="border border-[#252525] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center">
+                  <label className="text-sm font-medium text-gray-300 flex items-center">
                     <Settings className="w-4 h-4 mr-2" />
                     API Routes & Backend Configuration
                   </label>
                   <button
                     type="button"
                     onClick={addApiRoute}
-                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded flex items-center"
+                    className="px-3 py-1 bg-lava-600 hover:bg-lava-700 text-white text-xs rounded flex items-center"
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Add Route
@@ -635,13 +638,13 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                 </div>
 
                 {formData.apiRoutes.length === 0 ? (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p className="text-xs text-gray-500 text-center py-4">
                     No API routes configured. Add routes if your frontend makes API calls.
                   </p>
                 ) : (
                   <div className="space-y-3">
                     {formData.apiRoutes.map((route, idx) => (
-                      <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
+                      <div key={idx} className="p-3 bg-[#1a1a1a] rounded border border-[#1f1f1f]">
                         <div className="grid grid-cols-12 gap-2">
                           <div className="col-span-4">
                             <input
@@ -649,7 +652,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                               value={route.path}
                               onChange={(e) => updateApiRoute(idx, 'path', e.target.value)}
                               placeholder="/api"
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                              className="w-full px-2 py-1 text-sm border border-[#252525] rounded bg-[#141414]"
                             />
                           </div>
                           <div className="col-span-3">
@@ -658,7 +661,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                               value={route.port}
                               onChange={(e) => updateApiRoute(idx, 'port', e.target.value)}
                               placeholder="Port (3000)"
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                              className="w-full px-2 py-1 text-sm border border-[#252525] rounded bg-[#141414]"
                             />
                           </div>
                           <div className="col-span-4">
@@ -667,14 +670,14 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                               value={route.description}
                               onChange={(e) => updateApiRoute(idx, 'description', e.target.value)}
                               placeholder="Description"
-                              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                              className="w-full px-2 py-1 text-sm border border-[#252525] rounded bg-[#141414]"
                             />
                           </div>
                           <div className="col-span-1 flex items-center">
                             <button
                               type="button"
                               onClick={() => removeApiRoute(idx)}
-                              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600"
+                              className="p-1 hover:bg-red-900/40 rounded text-red-600"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -685,7 +688,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                   </div>
                 )}
 
-                <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                <div className="mt-3 text-xs text-gray-500 bg-lava-900/20 bg-lava-900/20 p-2 rounded">
                   <AlertCircle className="w-3 h-3 inline mr-1" />
                   API routes will be proxied to the specified backend port (e.g., /api → localhost:3000)
                 </div>
@@ -696,8 +699,8 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
           {step === 4 && (
             <div className="space-y-6">
               {/* SSL Configuration */}
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">SSL Certificate</h3>
+              <div className="border border-[#252525] rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-100 mb-4">SSL Certificate</h3>
                 
                 <div className="space-y-4">
                   <label className="flex items-center space-x-3 cursor-pointer">
@@ -705,13 +708,13 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                       type="checkbox"
                       checked={formData.enableSSL}
                       onChange={(e) => setFormData(prev => ({ ...prev, enableSSL: e.target.checked }))}
-                      className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-5 h-5 rounded border-[#252525] text-lava-500 focus:ring-lava-500"
                     />
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm font-medium text-gray-100">
                         Enable SSL/HTTPS
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500">
                         Install free SSL certificate using Let's Encrypt (Certbot)
                       </p>
                     </div>
@@ -723,9 +726,9 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                         type="checkbox"
                         checked={formData.autoRenewSSL}
                         onChange={(e) => setFormData(prev => ({ ...prev, autoRenewSSL: e.target.checked }))}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded border-[#252525] text-lava-500 focus:ring-lava-500"
                       />
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <p className="text-sm text-gray-300">
                         Auto-renew SSL certificate
                       </p>
                     </label>
@@ -733,8 +736,8 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                 </div>
 
                 {formData.enableSSL && (
-                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                    <p className="text-xs text-yellow-700 dark:text-yellow-300 flex items-start">
+                  <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-800 rounded">
+                    <p className="text-xs text-yellow-400 flex items-start">
                       <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
                       <span>
                         Make sure your domain's DNS is properly configured and pointing to this server before enabling SSL.
@@ -746,53 +749,53 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
               </div>
 
               {/* Review Configuration */}
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Review Configuration</h3>
+              <div className="border border-[#252525] rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-100 mb-4">Review Configuration</h3>
                 
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Domain:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-gray-400">Domain:</span>
+                    <span className="font-medium text-gray-100">
                       {formData.subdomain}.{formData.domain}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Document Root:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-gray-400">Document Root:</span>
+                    <span className="font-medium text-gray-100">
                       {formData.folderLocation}/{formData.folderName}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Main File:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-gray-400">Main File:</span>
+                    <span className="font-medium text-gray-100">
                       {formData.mainFile}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Upload Method:</span>
-                    <span className="font-medium text-gray-900 dark:text-white capitalize">
+                    <span className="text-gray-400">Upload Method:</span>
+                    <span className="font-medium text-gray-100 capitalize">
                       {formData.uploadMethod}
                     </span>
                   </div>
                   {formData.uploadMethod === 'local' && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Files:</span>
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="text-gray-400">Files:</span>
+                      <span className="font-medium text-gray-100">
                         {formData.localFiles.length} file(s)
                       </span>
                     </div>
                   )}
                   {formData.apiRoutes.length > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">API Routes:</span>
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="text-gray-400">API Routes:</span>
+                      <span className="font-medium text-gray-100">
                         {formData.apiRoutes.length} route(s) configured
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">SSL:</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-gray-400">SSL:</span>
+                    <span className="font-medium text-gray-100">
                       {formData.enableSSL ? 'Enabled' : 'Disabled'}
                     </span>
                   </div>
@@ -803,10 +806,10 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-t border-[#1f1f1f]">
           <button
             onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="px-4 py-2 text-gray-300 hover:bg-[#1a1a1a] rounded-lg transition-colors"
           >
             {step === 1 ? 'Cancel' : 'Previous'}
           </button>
@@ -816,7 +819,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
               <button
                 onClick={() => setStep(step + 1)}
                 disabled={!isStepValid()}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-lava-600 hover:bg-lava-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
