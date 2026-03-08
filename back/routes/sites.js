@@ -215,7 +215,7 @@ router.get('/', (req, res) => {
           const configContent = fs.readFileSync(confPath, 'utf8');
           const serverNameMatch = configContent.match(/ServerName\s+([^\s]+)/);
           if (serverNameMatch) {
-            domain = serverNameMatch[1].replace('.local', '');
+            domain = serverNameMatch[1];
           }
         } catch (e) {
           console.warn(`Could not read config for ${site}`, e);
@@ -283,9 +283,12 @@ router.post('/add', (req, res) => {
       cmds.push(`sudo chown www-data:www-data ${documentRoot}/${f.originalname}`);
     });
 
+    // Use full domain - only append .local if subdomain doesn't already contain a dot
+    const serverName = subdomain.includes('.') ? subdomain : `${subdomain}.local`;
+
     // Apache config
     const apacheConf = `<VirtualHost *:80>
-  ServerName ${subdomain}.local
+  ServerName ${serverName}
   DocumentRoot ${documentRoot}
   DirectoryIndex ${mainFile}
   <Directory ${documentRoot}>
@@ -296,12 +299,12 @@ router.post('/add', (req, res) => {
 </VirtualHost>`;
 
     // Write config to temp file and move it
-    const tempFile = `/tmp/${subdomain}.conf`;
+    const tempFile = `/tmp/${serverName}.conf`;
     fs.writeFileSync(tempFile, apacheConf);
     
     cmds.push(`sudo mv ${tempFile} ${confFile}`);
     cmds.push(`sudo chown root:root ${confFile}`);
-    cmds.push(`echo '127.0.0.1 ${subdomain}.local' | sudo tee -a /etc/hosts`);
+    cmds.push(`grep -qF '${serverName}' /etc/hosts || echo '127.0.0.1 ${serverName}' | sudo tee -a /etc/hosts`);
     cmds.push(`sudo a2ensite ${subdomain}.conf`);
     cmds.push(`sudo systemctl reload apache2`);
 
@@ -374,9 +377,20 @@ router.post('/create-advanced', async (req, res) => {
 
       // Step 2: Handle file upload based on method
       if (uploadMethod === 'local' && files && files.length > 0) {
-        files.forEach(f => {
-          setupCmds.push(`sudo mv ${f.path} ${documentRoot}/${f.originalname}`);
-          setupCmds.push(`sudo chown www-data:www-data ${documentRoot}/${f.originalname}`);
+        // relativePaths array matches files array order (sent from frontend)
+        const relativePaths = req.body.relativePaths
+          ? (Array.isArray(req.body.relativePaths) ? req.body.relativePaths : [req.body.relativePaths])
+          : [];
+
+        files.forEach((f, i) => {
+          // Use the relative path if available (preserves folder structure), else just filename
+          const relPath = relativePaths[i] || f.originalname;
+          const destPath = `${documentRoot}/${relPath}`;
+          const destDir = path.dirname(destPath);
+          // Ensure the subdirectory exists before moving the file
+          setupCmds.push(`sudo mkdir -p ${destDir}`);
+          setupCmds.push(`sudo mv ${f.path} ${destPath}`);
+          setupCmds.push(`sudo chown www-data:www-data ${destPath}`);
         });
       } else if (uploadMethod === 'server' && serverPath) {
         // Copy files from server path to document root

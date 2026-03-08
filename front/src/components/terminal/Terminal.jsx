@@ -235,14 +235,14 @@ export default function Terminal() {
   return (
     <div className="h-full flex flex-col">
       {/* Tabs Bar */}
-      <div className="flex items-center bg-gray-900 border-b border-gray-700 overflow-x-auto">
+      <div className="flex items-center bg-[#0e0e0e] border-b border-[#1f1f1f] overflow-x-auto">
         {sessions.map((session) => (
           <div
             key={session.id}
-            className={`flex items-center gap-2 px-4 py-2 border-r border-gray-700 cursor-pointer transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 border-r border-[#1f1f1f] cursor-pointer transition-colors ${
               activeSessionId === session.id
-                ? "bg-gray-800 text-green-400"
-                : "bg-gray-900 text-gray-400 hover:bg-gray-800"
+                ? "bg-[#141414] text-green-400"
+                : "bg-[#0e0e0e] text-gray-400 hover:bg-gray-800"
             }`}
             onClick={() => setActiveSessionId(session.id)}
           >
@@ -254,7 +254,7 @@ export default function Terminal() {
                 e.stopPropagation();
                 downloadSessionLog(session.id);
               }}
-              className="p-1 hover:bg-gray-700 rounded transition-colors"
+              className="p-1 hover:bg-[#1a1a1a] rounded transition-colors"
               title="Download session log"
             >
               <Download className="w-3 h-3" />
@@ -275,7 +275,7 @@ export default function Terminal() {
         {/* Add New Session Button */}
         <button
           onClick={createNewSession}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-green-400 transition-colors whitespace-nowrap"
+          className="flex items-center gap-2 px-4 py-2 bg-[#0e0e0e] text-gray-400 hover:bg-[#141414] hover:text-green-400 transition-colors whitespace-nowrap"
           title="New terminal session"
         >
           <Plus className="w-4 h-4" />

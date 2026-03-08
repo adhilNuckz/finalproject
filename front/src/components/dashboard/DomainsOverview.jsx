@@ -97,21 +97,21 @@ export default function DomainsOverview() {
   const getStatusBadge = (status) => {
     const base = "px-2 py-1 text-xs font-medium rounded-full";
     switch (status) {
-      case 'active': return `${base} bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400`;
-      case 'inactive': return `${base} bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400`;
-      case 'pending': return `${base} bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400`;
-      default: return `${base} bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400`;
+      case 'active': return `${base} bg-green-900/30 text-green-400`;
+      case 'inactive': return `${base} bg-ember-900/30 text-ember-400`;
+      case 'pending': return `${base} bg-amber-900/30 text-amber-400`;
+      default: return `${base} bg-[#141414] text-gray-400`;
     }
   };
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Connected Domains</h3>
+          <h3 className="text-lg font-semibold text-white">Connected Domains</h3>
           <button 
             onClick={() => setShowModal(true)}
-            className="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center px-3 py-2 lava-gradient hover:opacity-90 text-white text-sm font-medium rounded-lg transition-all"
           >
             <Plus className="w-4 h-4 mr-1" />
             Add Domain
@@ -119,22 +119,22 @@ export default function DomainsOverview() {
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading domains...</div>
+          <div className="text-center py-8 text-gray-500">Loading domains...</div>
         ) : domains.length === 0 ? (
           <div className="text-center py-8">
             <Globe className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">No domains connected yet</p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">Click "Add Domain" to connect your first domain</p>
+            <p className="text-gray-400 mb-2">No domains connected yet</p>
+            <p className="text-sm text-gray-500">Click "Add Domain" to connect your first domain</p>
           </div>
         ) : (
           <div className="space-y-3">
             {domains.map((domain, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
+              <div key={index} className="flex items-center justify-between p-3 border border-[#1f1f1f] rounded-lg hover:bg-[#1a1a1a] hover:border-lava-800/30 transition-all group">
                 <div className="flex items-center flex-1">
-                  <Globe className="w-5 h-5 text-gray-400 mr-3" />
+                  <Globe className="w-5 h-5 text-gray-500 mr-3" />
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white">{domain.domain}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="font-medium text-white">{domain.domain}</p>
+                    <p className="text-xs text-gray-500">
                       Added {new Date(domain.addedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -144,7 +144,7 @@ export default function DomainsOverview() {
                   {getStatusIcon(domain.status)}
                   <button
                     onClick={() => handleDeleteDomain(domain.domain)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-ember-500 hover:bg-ember-900/20 rounded transition-all"
                     title="Delete domain"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -158,17 +158,17 @@ export default function DomainsOverview() {
 
       {/* Add Domain Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141414] border border-[#1f1f1f] rounded-xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Domain</h3>
+              <h3 className="text-xl font-semibold text-white">Add New Domain</h3>
               <button
                 onClick={() => {
                   setShowModal(false);
                   setNewDomain('');
                   setError('');
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-gray-500 hover:text-gray-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -176,7 +176,7 @@ export default function DomainsOverview() {
 
             <form onSubmit={handleAddDomain}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Domain Name
                 </label>
                 <input
@@ -184,17 +184,17 @@ export default function DomainsOverview() {
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
                   placeholder="example.com or nuckz.live"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2 border border-[#2a2a2a] rounded-lg focus:ring-2 focus:ring-lava-500/50 focus:border-lava-500 bg-[#0e0e0e] text-white"
                   disabled={submitting}
                 />
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-gray-500">
                   Enter the domain name you've pointed to this server
                 </p>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <div className="mb-4 p-3 bg-ember-900/20 border border-ember-800/50 rounded-lg">
+                  <p className="text-sm text-ember-400">{error}</p>
                 </div>
               )}
 
@@ -206,14 +206,14 @@ export default function DomainsOverview() {
                     setNewDomain('');
                     setError('');
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 px-4 py-2 border border-[#2a2a2a] text-gray-300 rounded-lg hover:bg-[#1a1a1a] transition-all"
                   disabled={submitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 lava-gradient hover:opacity-90 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={submitting}
                 >
                   {submitting ? 'Adding...' : 'Add Domain'}

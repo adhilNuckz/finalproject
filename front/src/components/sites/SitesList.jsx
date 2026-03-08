@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Globe, CheckCircle, XCircle, AlertCircle, Play, Pause, RotateCcw, Shield, Eye, Lock, ExternalLink } from 'lucide-react';
-
-const API_BASE = 'http://localhost:5000';
+import { API_BASE_URL as API_BASE } from '../../config.js';
 
 export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpdate, onSiteAction, loading }) {
   const [installingSSL, setInstallingSSL] = useState({});
@@ -18,10 +17,10 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
   const getStatusBadge = (status) => { 
     const base = "px-2 py-1 text-xs font-medium rounded-full"; 
     switch (status) { 
-      case 'online': return `${base} bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400`; 
-      case 'offline': return `${base} bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400`; 
-      case 'maintenance': return `${base} bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400`; 
-      default: return `${base} bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-400`; 
+      case 'online': return `${base} bg-green-900/30 text-green-400`; 
+      case 'offline': return `${base} bg-red-900/30 text-red-400`; 
+      case 'maintenance': return `${base} bg-yellow-900/30 text-yellow-400`; 
+      default: return `${base} bg-[#1a1a1a] bg-[#0e0e0e]/30 text-gray-200 text-gray-500`; 
     } 
   };
 
@@ -87,26 +86,26 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700"><h3 className="text-lg font-semibold text-gray-900 dark:text-white">All Sites {loading ? '(loading...)' : `(${sites.length})`}</h3></div>
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+    <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f]">
+      <div className="p-6 border-b border-[#1f1f1f]"><h3 className="text-lg font-semibold text-gray-100">All Sites {loading ? '(loading...)' : `(${sites.length})`}</h3></div>
+      <div className="divide-y divide-[#1f1f1f]">
         {sites.map(site => (
-          <div key={site.id} className={`p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${selectedSite?.id === site.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : ''}`} onClick={() => onSiteSelect(site)}>
+          <div key={site.id} className={`p-6 hover:bg-[#1a1a1a] transition-colors cursor-pointer ${selectedSite?.id === site.id ? 'bg-lava-900/20 bg-lava-900/20 border-l-4 border-lava-500' : ''}`} onClick={() => onSiteSelect(site)}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center">
                 <Globe className="w-5 h-5 text-gray-400 mr-3" />
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h4 className="font-medium text-gray-900 dark:text-white">{site.domain}</h4>
+                    <h4 className="font-medium text-gray-100">{site.domain}</h4>
                     {site.ssl && (
-                      <div className="flex items-center px-2 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full">
-                        <Lock className="w-3 h-3 text-green-600 dark:text-green-400 mr-1" />
-                        <span className="text-xs text-green-700 dark:text-green-300 font-medium">SSL</span>
+                      <div className="flex items-center px-2 py-0.5 bg-green-900/30 rounded-full">
+                        <Lock className="w-3 h-3 text-green-600 mr-1" />
+                        <span className="text-xs text-green-300 font-medium">SSL</span>
                       </div>
                     )}
                     <span className={getStatusBadge(site.status)}>{site.status}</span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{site.path || '/var/www/html'}</p>
+                  <p className="text-sm text-gray-500 mt-1">{site.path || '/var/www/html'}</p>
                 </div>
               </div>
             </div>
@@ -114,10 +113,10 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {/* Protocol Selector Button Group */}
-                <div className="inline-flex rounded-md shadow-sm" role="group">
+                <div className="inline-flex rounded-md shadow-sm shadow-black/20" role="group">
                   <button 
                     onClick={(e) => openSite(site, 'http', e)} 
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-l-md transition-colors inline-flex items-center"
+                    className="px-3 py-1.5 bg-lava-600 hover:bg-lava-700 text-white text-sm font-medium rounded-l-md transition-colors inline-flex items-center"
                     title="Open with HTTP"
                   >
                     <ExternalLink className="w-3 h-3 mr-1" />
@@ -134,7 +133,7 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
                     </button>
                   ) : (
                     <button 
-                      className="px-3 py-1.5 bg-gray-400 dark:bg-gray-600 text-white text-sm font-medium rounded-r-md cursor-not-allowed inline-flex items-center opacity-60 -ml-px"
+                      className="px-3 py-1.5 bg-gray-400 bg-[#1f1f1f] text-white text-sm font-medium rounded-r-md cursor-not-allowed inline-flex items-center opacity-60 -ml-px"
                       title="HTTPS not available - Install SSL first"
                       disabled
                     >
@@ -169,14 +168,14 @@ export default function SitesList({ sites, selectedSite, onSiteSelect, onSiteUpd
               <div className="flex items-center space-x-1">
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleAction(site, site.status === 'offline' ? 'start' : 'stop'); }} 
-                  className={`p-1.5 rounded-md transition-colors ${site.status === 'online' ? 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30' : 'text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'}`} 
+                  className={`p-1.5 rounded-md transition-colors ${site.status === 'online' ? 'text-red-400 hover:bg-red-900/40' : 'text-green-600 hover:bg-green-900/40'}`} 
                   title={site.status === 'online' ? 'Pause (Maintenance Mode)' : 'Play (Resume Site)'}
                 >
                   {site.status === 'online' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleAction(site, 'restart'); }} 
-                  className="p-1.5 rounded-md text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors" 
+                  className="p-1.5 rounded-md text-lava-500 hover:bg-lava-900/30 transition-colors" 
                   title="Restart"
                 >
                   <RotateCcw className="w-4 h-4" />

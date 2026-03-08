@@ -132,7 +132,10 @@ export default function FileManager() {
     if (!files || files.length === 0) return;
     const formData = new FormData();
     formData.append('targetPath', currentPath);
-    Array.from(files).forEach(file => formData.append('files', file));
+    Array.from(files).forEach(file => {
+      formData.append('files', file);
+      formData.append('relativePaths', file.webkitRelativePath || file.name);
+    });
 
     try {
       const res = await fetch(`${API_BASE}/files/upload`, { method: 'POST', body: formData });

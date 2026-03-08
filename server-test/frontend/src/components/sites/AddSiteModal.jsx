@@ -100,11 +100,20 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
   };
 
   const handleLocalFileChange = (e) => {
-    const files = Array.from(e.target.files || []);
+    const IGNORED = ['.gitignore', '.git', 'node_modules', '.DS_Store', '.env', 'Thumbs.db'];
+    const isIgnored = (f) => IGNORED.some(p =>
+      (f.webkitRelativePath || f.name) === p ||
+      (f.webkitRelativePath || f.name).startsWith(p + '/') ||
+      (f.webkitRelativePath || f.name).includes('/' + p)
+    );
+    const files = Array.from(e.target.files || []).filter(f => !isIgnored(f));
+    const indexFile = files.find(f => f.name === 'index.html' || f.name === 'index.php');
     setFormData(prev => ({
       ...prev,
       localFiles: files,
-      mainFile: files.length > 0 ? files[0].name : 'index.html'
+      mainFile: indexFile
+        ? (indexFile.webkitRelativePath || indexFile.name)
+        : files.length > 0 ? (files[0].webkitRelativePath || files[0].name) : 'index.html'
     }));
   };
 
@@ -149,6 +158,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
       if (formData.uploadMethod === 'local') {
         formData.localFiles.forEach(file => {
           fd.append('files', file);
+          fd.append('relativePaths', file.webkitRelativePath || file.name);
         });
       } else {
         fd.append('serverPath', formData.serverPath);
@@ -257,7 +267,18 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                 <div className="flex space-x-2">
                   <select
                     value={formData.domain}
-                    onChange={(e) => setFormData(prev => ({ ...prev, domain: e.target.value }))}
+                    onChange={(e) => {
+                      const dom = e.target.value;
+                      setFormData(prev => {
+                        const prevAuto = `${prev.subdomain}.${prev.domain}`;
+                        const shouldAutoFill = !prev.folderName || prev.folderName === prevAuto;
+                        return {
+                          ...prev,
+                          domain: dom,
+                          folderName: shouldAutoFill && prev.subdomain && dom ? `${prev.subdomain}.${dom}` : prev.folderName
+                        };
+                      });
+                    }}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Choose a domain...</option>
@@ -309,7 +330,18 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                   <input
                     type="text"
                     value={formData.subdomain}
-                    onChange={(e) => setFormData(prev => ({ ...prev, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                    onChange={(e) => {
+                      const sub = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      setFormData(prev => {
+                        const prevAuto = `${prev.subdomain}.${prev.domain}`;
+                        const shouldAutoFill = !prev.folderName || prev.folderName === prevAuto;
+                        return {
+                          ...prev,
+                          subdomain: sub,
+                          folderName: shouldAutoFill && sub && prev.domain ? `${sub}.${prev.domain}` : prev.folderName
+                        };
+                      });
+                    }}
                     placeholder="blog, app, api, www"
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
@@ -373,7 +405,7 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
 
               {/* Local File Upload */}
               {formData.uploadMethod === 'local' && (
-                <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                <div className="p-6 border-2 border-dashed border-[#252525] rounded-lg">
                   <input
                     type="file"
                     multiple
@@ -381,31 +413,59 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     className="hidden"
                     id="file-upload"
                   />
-                  <label
-                    htmlFor="file-upload"
-                    className="flex flex-col items-center justify-center cursor-pointer"
-                  >
-                    <Upload className="w-12 h-12 text-gray-400 mb-3" />
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Click to upload files
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      HTML, CSS, JS, PHP, images, etc.
-                    </p>
-                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    webkitdirectory=""
+                    mozdirectory=""
+                    onChange={handleLocalFileChange}
+                    className="hidden"
+                    id="folder-upload"
+                  />
+
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <Upload className="w-12 h-12 text-gray-400" />
+                    <p className="text-sm font-medium text-gray-300">Select files or an entire folder</p>
+                    <div className="flex gap-3">
+                      <label
+                        htmlFor="file-upload"
+                        className="px-4 py-2 bg-[#1f1f1f] hover:bg-[#252525] border border-[#333] rounded-lg cursor-pointer text-sm text-gray-300 flex items-center gap-2 transition-colors"
+                      >
+                        <FileCode className="w-4 h-4" />
+                        Select Files
+                      </label>
+                      <label
+                        htmlFor="folder-upload"
+                        className="px-4 py-2 bg-lava-900/30 hover:bg-lava-900/50 border border-lava-700/50 rounded-lg cursor-pointer text-sm text-lava-400 flex items-center gap-2 transition-colors"
+                      >
+                        <FolderOpen className="w-4 h-4" />
+                        Select Folder
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500">HTML, CSS, JS, PHP, images — folders preserve structure</p>
+                  </div>
 
                   {formData.localFiles.length > 0 && (
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Selected Files ({formData.localFiles.length})
+                    <div className="mt-4 p-4 bg-[#1a1a1a] rounded-lg">
+                      <p className="text-sm font-medium text-gray-300 mb-2">
+                        {formData.localFiles.some(f => f.webkitRelativePath && f.webkitRelativePath.includes('/'))
+                          ? `Selected Folder — ${formData.localFiles.length} files`
+                          : `Selected ${formData.localFiles.length} file(s)`
+                        }
                       </p>
-                      <ul className="space-y-1 max-h-40 overflow-y-auto">
-                        {formData.localFiles.map((file, idx) => (
-                          <li key={idx} className="text-xs text-gray-600 dark:text-gray-300 flex items-center">
-                            <FileCode className="w-3 h-3 mr-2" />
-                            {file.name} ({(file.size / 1024).toFixed(2)} KB)
-                          </li>
-                        ))}
+                      <ul className="space-y-1 max-h-48 overflow-y-auto">
+                        {formData.localFiles.map((file, idx) => {
+                          const displayPath = file.webkitRelativePath || file.name;
+                          const depth = displayPath.split('/').length - 1;
+                          return (
+                            <li key={idx} className="text-xs text-gray-400 flex items-center" style={{ paddingLeft: `${depth * 12}px` }}>
+                              {depth > 0 && <span className="text-gray-600 mr-1">└</span>}
+                              <FileCode className="w-3 h-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{file.name}</span>
+                              <span className="ml-auto text-gray-600 pl-2">{(file.size / 1024).toFixed(1)}KB</span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
@@ -523,9 +583,10 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
                     onChange={(e) => setFormData(prev => ({ ...prev, mainFile: e.target.value }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
                   >
-                    {formData.localFiles.map((file) => (
-                      <option key={file.name} value={file.name}>{file.name}</option>
-                    ))}
+                    {formData.localFiles.map((file, idx) => {
+                      const relPath = file.webkitRelativePath || file.name;
+                      return <option key={relPath || idx} value={relPath}>{relPath}</option>;
+                    })}
                   </select>
                 ) : (
                   <input

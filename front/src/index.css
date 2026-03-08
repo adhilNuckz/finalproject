@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Force dark mode always */
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-[#0a0a0a] text-gray-100;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Smooth transitions on all interactive elements */
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, box-shadow, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111111;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ea580c;
+  }
+
+  /* Lava glow effect for focus */
+  *:focus-visible {
+    outline: 2px solid #f9731680;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Lava accent gradient */
+  .lava-gradient {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+  }
+
+  /* Subtle lava glow */
+  .lava-glow {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.15), 0 0 40px rgba(234, 88, 12, 0.05);
+  }
+
+  /* Card styling */
+  .lava-card {
+    @apply bg-[#141414] border border-[#1f1f1f] rounded-xl;
+  }
+
+  /* Sidebar active item */
+  .lava-active {
+    @apply bg-gradient-to-r from-lava-600/20 to-lava-500/10 border-l-2 border-lava-500 text-lava-400;
+  }
+}

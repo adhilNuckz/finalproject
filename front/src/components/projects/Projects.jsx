@@ -207,11 +207,11 @@ export default function Projects() {
   const getStatusBadge = (pm2) => {
     if (!pm2) return null;
     const colors = {
-      online: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      stopped: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      errored: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      'not-found': 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
-      unknown: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+      online: 'bg-green-900/30 text-green-700',
+      stopped: 'bg-red-900/30 text-red-700',
+      errored: 'bg-red-900/30 text-red-700',
+      'not-found': 'bg-[#1a1a1a] text-gray-500 bg-[#1a1a1a] text-gray-500',
+      unknown: 'bg-yellow-900/30 text-yellow-700'
     };
     return (
       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[pm2.status] || colors.unknown}`}>
@@ -230,7 +230,7 @@ export default function Projects() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader className="w-8 h-8 animate-spin text-lava-400" />
       </div>
     );
   }
@@ -240,18 +240,18 @@ export default function Projects() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <FolderGit2 className="w-7 h-7 text-blue-500" />
+          <h1 className="text-2xl font-bold text-gray-100 flex items-center gap-2">
+            <FolderGit2 className="w-7 h-7 text-lava-400" />
             Projects
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Manage your projects, files, sites, PM2 processes and Git repos in one place
           </p>
         </div>
         <div className="flex gap-2 items-center">
           {/* GitHub Account Button */}
           {githubAuth ? (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-gray-800 text-white border border-gray-600">
+            <div className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-[#141414] text-white border border-gray-600">
               {githubAuth.avatarUrl ? (
                 <img src={githubAuth.avatarUrl} alt="" className="w-5 h-5 rounded-full" />
               ) : (
@@ -269,20 +269,20 @@ export default function Projects() {
           ) : (
             <button
               onClick={() => setShowGithubModal(true)}
-              className="px-4 py-2 text-sm rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition flex items-center gap-2 border border-gray-600"
+              className="px-4 py-2 text-sm rounded-lg bg-[#141414] text-white hover:bg-[#1a1a1a] transition flex items-center gap-2 border border-gray-600"
             >
               <Github className="w-4 h-4" /> Sign in to GitHub
             </button>
           )}
           <button
             onClick={fetchProjects}
-            className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+            className="px-3 py-2 text-sm rounded-lg bg-[#1a1a1a] text-gray-300 hover:bg-[#1f1f1f] transition"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2"
+            className="px-4 py-2 text-sm rounded-lg bg-lava-600 text-white hover:bg-lava-700 transition flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> New Project
           </button>
@@ -290,20 +290,20 @@ export default function Projects() {
       </div>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg flex items-center gap-2">
+        <div className="bg-red-900/20 text-red-400 p-3 rounded-lg flex items-center gap-2">
           <AlertCircle className="w-4 h-4" /> {error}
         </div>
       )}
 
       {/* Projects List */}
       {projects.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <FolderGit2 className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">No projects yet</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create your first project to get started</p>
+        <div className="text-center py-16 bg-[#141414] rounded-xl border border-[#1f1f1f]">
+          <FolderGit2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-300">No projects yet</h3>
+          <p className="text-sm text-gray-500 mt-1">Create your first project to get started</p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+            className="mt-4 px-4 py-2 bg-lava-600 text-white rounded-lg hover:bg-lava-700 transition text-sm"
           >
             <Plus className="w-4 h-4 inline mr-1" /> Create Project
           </button>
@@ -311,27 +311,27 @@ export default function Projects() {
       ) : (
         <div className="space-y-4">
           {projects.map(project => (
-            <div key={project.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div key={project.id} className="bg-[#141414] rounded-xl border border-[#1f1f1f] overflow-hidden">
               {/* Project Header */}
               <div className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <h3
-                        className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
+                        className="text-lg font-semibold text-gray-100 hover:text-lava-500 cursor-pointer transition"
                         onClick={() => setSelectedProject(project)}
                       >
                         {project.name}
                       </h3>
                       {project.pm2 && getStatusBadge(project.pm2)}
                       {project.siteEnabled && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-lava-900/30 text-lava-400 bg-lava-900/30">
                           Site Active
                         </span>
                       )}
                     </div>
 
-                    <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <FolderOpen className="w-3.5 h-3.5" /> {project.path}
                       </span>
@@ -357,7 +357,7 @@ export default function Projects() {
 
                     {/* PM2 Stats Row */}
                     {project.pm2 && project.pm2.status === 'online' && (
-                      <div className="mt-2 flex gap-4 text-xs text-gray-400 dark:text-gray-500">
+                      <div className="mt-2 flex gap-4 text-xs text-gray-400">
                         <span>CPU: {project.pm2.cpu}%</span>
                         <span>Memory: {formatMemory(project.pm2.memory)}</span>
                       </div>
@@ -372,8 +372,8 @@ export default function Projects() {
                       onClick={() => toggleCodePanel(project.id)}
                       className={`p-2 rounded-lg text-sm transition ${
                         codePanel === project.id
-                          ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? 'bg-purple-900/30 text-purple-600'
+                          : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f]'
                       }`}
                       title="Code Editor"
                     >
@@ -385,8 +385,8 @@ export default function Projects() {
                       onClick={() => toggleTerminalPanel(project.id)}
                       className={`p-2 rounded-lg text-sm transition ${
                         terminalPanel === project.id
-                          ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? 'bg-green-900/30 text-green-600'
+                          : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f]'
                       }`}
                       title="Open Terminal Here"
                     >
@@ -399,8 +399,8 @@ export default function Projects() {
                         onClick={() => openGitPanel(project.id)}
                         className={`p-2 rounded-lg text-sm transition ${
                           gitPanel === project.id
-                            ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            ? 'bg-orange-100 text-orange-600'
+                            : 'bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f]'
                         }`}
                         title="Git Operations"
                       >
@@ -410,7 +410,7 @@ export default function Projects() {
                     {project.git === null && (
                       <button
                         onClick={() => gitAction(project.id, 'init', {})}
-                        className="p-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                        className="p-2 rounded-lg text-sm bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f] transition"
                         title="Initialize Git"
                       >
                         <GitFork className="w-4 h-4" />
@@ -423,7 +423,7 @@ export default function Projects() {
                         href={`http://${project.domain}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                        className="p-2 rounded-lg text-sm bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f] transition"
                         title="Open Site"
                       >
                         <ExternalLink className="w-4 h-4" />
@@ -434,7 +434,7 @@ export default function Projects() {
                     <button
                       onClick={() => deleteProject(project.id, false)}
                       disabled={actionLoading[`del-${project.id}`]}
-                      className="p-2 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition"
+                      className="p-2 rounded-lg text-sm bg-red-900/20 text-red-500 hover:bg-red-900/40 transition"
                       title="Delete Project"
                     >
                       {actionLoading[`del-${project.id}`] ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -488,42 +488,42 @@ export default function Projects() {
       {/* GitHub Sign-In Modal */}
       {showGithubModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="bg-[#141414] rounded-xl border border-[#1f1f1f] w-full max-w-md mx-4 shadow-2xl shadow-black/40">
+            <div className="flex items-center justify-between p-4 border-b border-[#1f1f1f]">
+              <h2 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
                 <Github className="w-5 h-5" /> Sign in to GitHub
               </h2>
-              <button onClick={() => { setShowGithubModal(false); setGithubError(''); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <button onClick={() => { setShowGithubModal(false); setGithubError(''); }} className="text-gray-400 hover:text-gray-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-4 space-y-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Use a <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Personal Access Token</a> to authenticate git operations. The token needs <strong>repo</strong> scope.
+              <p className="text-sm text-gray-500">
+                Use a <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-lava-400 hover:underline">Personal Access Token</a> to authenticate git operations. The token needs <strong>repo</strong> scope.
               </p>
               {githubError && (
-                <div className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded flex items-center gap-2">
+                <div className="text-sm text-red-500 bg-red-900/20 p-2 rounded flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" /> {githubError}
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">GitHub Username</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">GitHub Username</label>
                 <input
                   type="text"
                   value={githubUsername}
                   onChange={(e) => setGithubUsername(e.target.value)}
                   placeholder="username"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#1a1a1a] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Personal Access Token</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Personal Access Token</label>
                 <input
                   type="password"
                   value={githubToken}
                   onChange={(e) => setGithubToken(e.target.value)}
                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#1a1a1a] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500 focus:border-transparent"
                 />
               </div>
               <button
@@ -670,12 +670,12 @@ function CodePanelComponent({ project }) {
     const ext = name.split('.').pop()?.toLowerCase();
     const iconMap = {
       js: <Code2 className="w-3.5 h-3.5 text-yellow-500" />,
-      jsx: <Code2 className="w-3.5 h-3.5 text-blue-400" />,
-      ts: <Code2 className="w-3.5 h-3.5 text-blue-500" />,
-      tsx: <Code2 className="w-3.5 h-3.5 text-blue-500" />,
+      jsx: <Code2 className="w-3.5 h-3.5 text-lava-400" />,
+      ts: <Code2 className="w-3.5 h-3.5 text-lava-400" />,
+      tsx: <Code2 className="w-3.5 h-3.5 text-lava-400" />,
       json: <FileJson className="w-3.5 h-3.5 text-yellow-600" />,
       html: <FileType className="w-3.5 h-3.5 text-orange-500" />,
-      css: <FileType className="w-3.5 h-3.5 text-blue-500" />,
+      css: <FileType className="w-3.5 h-3.5 text-lava-400" />,
       md: <FileText className="w-3.5 h-3.5 text-gray-500" />,
       png: <Image className="w-3.5 h-3.5 text-green-500" />,
       jpg: <Image className="w-3.5 h-3.5 text-green-500" />,
@@ -693,14 +693,14 @@ function CodePanelComponent({ project }) {
   const relativePath = currentPath.replace(project.path, '') || '/';
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+    <div className="border-t border-[#1f1f1f] bg-[#111111]/50">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[#1f1f1f] bg-[#141414]">
         <div className="flex items-center gap-2 text-sm">
           <FileCode className="w-4 h-4 text-purple-500" />
-          <span className="font-medium text-gray-700 dark:text-gray-300">Code</span>
+          <span className="font-medium text-gray-300">Code</span>
           <span className="text-gray-400 mx-1">/</span>
-          <button onClick={() => { setCurrentPath(project.path); setPathHistory([project.path]); setSelectedFile(null); }} className="text-blue-500 hover:text-blue-600 text-xs">
+          <button onClick={() => { setCurrentPath(project.path); setPathHistory([project.path]); setSelectedFile(null); }} className="text-lava-400 hover:text-lava-500 text-xs">
             root
           </button>
           {relativePath !== '/' && relativePath.split('/').filter(Boolean).map((part, i) => (
@@ -712,11 +712,11 @@ function CodePanelComponent({ project }) {
         </div>
         <div className="flex items-center gap-2">
           {pathHistory.length > 1 && (
-            <button onClick={goBack} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition" title="Go Back">
+            <button onClick={goBack} className="p-1 rounded hover:bg-[#1a1a1a] text-gray-500 transition" title="Go Back">
               <ArrowLeft className="w-3.5 h-3.5" />
             </button>
           )}
-          <button onClick={() => fetchFiles(currentPath)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition" title="Refresh">
+          <button onClick={() => fetchFiles(currentPath)} className="p-1 rounded hover:bg-[#1a1a1a] text-gray-500 transition" title="Refresh">
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -724,7 +724,7 @@ function CodePanelComponent({ project }) {
 
       <div className="flex" style={{ height: '400px' }}>
         {/* File Tree (left) */}
-        <div className="w-64 border-r border-gray-200 dark:border-gray-700 overflow-y-auto bg-white dark:bg-gray-800">
+        <div className="w-64 border-r border-[#1f1f1f] overflow-y-auto bg-[#141414]">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader className="w-4 h-4 animate-spin text-gray-400" />
@@ -737,8 +737,8 @@ function CodePanelComponent({ project }) {
                 <button
                   key={i}
                   onClick={() => file.isDirectory ? navigateToDir(file.path) : openFile(file)}
-                  className={`w-full text-left flex items-center gap-2 px-3 py-1.5 text-xs transition hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                    selectedFile?.path === file.path ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                  className={`w-full text-left flex items-center gap-2 px-3 py-1.5 text-xs transition hover:bg-[#1a1a1a] ${
+                    selectedFile?.path === file.path ? 'bg-lava-900/20 bg-lava-900/20 text-lava-500' : 'text-gray-300'
                   }`}
                 >
                   {file.isDirectory ? <Folder className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" /> : getFileIcon(file.name)}
@@ -753,7 +753,7 @@ function CodePanelComponent({ project }) {
         {/* Editor (right) */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {!selectedFile ? (
-            <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-gray-400">
               <div className="text-center">
                 <FileCode className="w-10 h-10 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">Select a file to view or edit</p>
@@ -761,15 +761,15 @@ function CodePanelComponent({ project }) {
             </div>
           ) : fileLoading ? (
             <div className="flex-1 flex items-center justify-center">
-              <Loader className="w-5 h-5 animate-spin text-blue-500" />
+              <Loader className="w-5 h-5 animate-spin text-lava-400" />
             </div>
           ) : (
             <>
               {/* File Header */}
-              <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1f1f1f] bg-[#141414]">
                 <div className="flex items-center gap-2 text-xs">
                   {getFileIcon(selectedFile.name)}
-                  <span className="font-medium text-gray-700 dark:text-gray-300">{selectedFile.name}</span>
+                  <span className="font-medium text-gray-300">{selectedFile.name}</span>
                   <span className="text-gray-400">({getLanguage(selectedFile.name)})</span>
                   {isEditing && editedContent !== fileContent && (
                     <span className="text-yellow-500 font-medium">&#x2022; Modified</span>
@@ -778,13 +778,13 @@ function CodePanelComponent({ project }) {
                 <div className="flex items-center gap-1">
                   {!isEditing ? (
                     <button onClick={() => setIsEditing(true)}
-                      className="px-2 py-1 text-xs rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
+                      className="px-2 py-1 text-xs rounded bg-lava-900/20 bg-lava-900/20 text-lava-500 hover:bg-lava-900/30 transition">
                       Edit
                     </button>
                   ) : (
                     <>
                       <button onClick={() => { setEditedContent(fileContent); setIsEditing(false); }}
-                        className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                        className="px-2 py-1 text-xs rounded bg-[#1a1a1a] text-gray-500 hover:bg-[#1f1f1f] transition">
                         Cancel
                       </button>
                       <button onClick={saveFile} disabled={saving || editedContent === fileContent}
@@ -892,7 +892,7 @@ function TerminalPanelComponent({ project }) {
   }, []);
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700">
+    <div className="border-t border-[#1f1f1f]">
       <div className="flex items-center justify-between px-4 py-2 bg-gray-900">
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <TerminalSquare className="w-3.5 h-3.5 text-green-500" />
@@ -915,8 +915,8 @@ function GitPanelComponent({
 }) {
   if (gitLoading) {
     return (
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex items-center justify-center">
-        <Loader className="w-5 h-5 animate-spin text-blue-500 mr-2" />
+      <div className="border-t border-[#1f1f1f] p-4 flex items-center justify-center">
+        <Loader className="w-5 h-5 animate-spin text-lava-400 mr-2" />
         <span className="text-sm text-gray-500">Loading git status...</span>
       </div>
     );
@@ -924,19 +924,19 @@ function GitPanelComponent({
 
   if (!gitStatus || gitStatus.error) {
     return (
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="border-t border-[#1f1f1f] p-4">
         <p className="text-sm text-red-500">{gitStatus?.error || 'Failed to load git status'}</p>
       </div>
     );
   }
 
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+    <div className="border-t border-[#1f1f1f] bg-[#111111]/50">
       <div className="p-4 space-y-4">
         {/* Branch & Quick Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
               <GitBranch className="w-4 h-4 text-orange-500" /> {gitStatus.branch}
             </span>
             <span className="text-xs text-gray-400">
@@ -946,7 +946,7 @@ function GitPanelComponent({
           <div className="flex items-center gap-2">
             <button
               onClick={onRefresh}
-              className="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+              className="p-1.5 rounded text-gray-400 hover:text-gray-400 transition"
               title="Refresh"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -962,7 +962,7 @@ function GitPanelComponent({
             <button
               onClick={onPush}
               disabled={actionLoading[`git-push-${project.id}`]}
-              className="px-3 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1 disabled:opacity-50"
+              className="px-3 py-1.5 text-xs rounded-lg bg-lava-600 text-white hover:bg-lava-700 transition flex items-center gap-1 disabled:opacity-50"
             >
               {actionLoading[`git-push-${project.id}`] ? <Loader className="w-3 h-3 animate-spin" /> : <ArrowUpFromLine className="w-3 h-3" />}
               Push
@@ -973,10 +973,10 @@ function GitPanelComponent({
         {/* Changed Files */}
         {gitStatus.changedFiles.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Changed Files</h4>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-h-40 overflow-y-auto">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Changed Files</h4>
+            <div className="bg-[#141414] rounded-lg border border-[#1f1f1f] max-h-40 overflow-y-auto">
               {gitStatus.changedFiles.map((f, i) => (
-                <div key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs border-b border-gray-100 dark:border-gray-700 last:border-0">
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs border-b border-gray-100 border-[#1f1f1f] last:border-0">
                   <span className={`font-mono font-bold w-5 text-center ${
                     f.status === 'M' ? 'text-yellow-500' :
                     f.status === 'A' || f.status === '?' || f.status === '??' ? 'text-green-500' :
@@ -984,7 +984,7 @@ function GitPanelComponent({
                   }`}>
                     {f.status}
                   </span>
-                  <span className="text-gray-700 dark:text-gray-300 font-mono truncate">{f.file}</span>
+                  <span className="text-gray-300 font-mono truncate">{f.file}</span>
                 </div>
               ))}
             </div>
@@ -993,14 +993,14 @@ function GitPanelComponent({
 
         {/* Commit Box */}
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Commit Changes</h4>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Commit Changes</h4>
           <div className="flex gap-2">
             <input
               type="text"
               value={commitMessage}
               onChange={e => setCommitMessage(e.target.value)}
               placeholder="Commit message..."
-              className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 text-sm rounded-lg border border-[#252525] bg-[#141414] text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-lava-500 focus:border-transparent"
               onKeyDown={e => e.key === 'Enter' && onCommit()}
             />
             <button
@@ -1017,11 +1017,11 @@ function GitPanelComponent({
         {/* Recent Commits */}
         {gitStatus.recentCommits.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Recent Commits</h4>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-h-32 overflow-y-auto">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Recent Commits</h4>
+            <div className="bg-[#141414] rounded-lg border border-[#1f1f1f] max-h-32 overflow-y-auto">
               {gitStatus.recentCommits.map((commit, i) => (
-                <div key={i} className="px-3 py-1.5 text-xs font-mono text-gray-600 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                  <span className="text-blue-500">{commit.substring(0, 7)}</span>{' '}
+                <div key={i} className="px-3 py-1.5 text-xs font-mono text-gray-400 border-b border-gray-100 border-[#1f1f1f] last:border-0">
+                  <span className="text-lava-400">{commit.substring(0, 7)}</span>{' '}
                   {commit.substring(8)}
                 </div>
               ))}
@@ -1031,7 +1031,7 @@ function GitPanelComponent({
 
         {/* Action Output */}
         {actionOutput && (
-          <div className="bg-gray-900 text-green-400 text-xs font-mono p-3 rounded-lg max-h-32 overflow-y-auto whitespace-pre-wrap">
+          <div className="bg-[#0e0e0e] text-green-400 text-xs font-mono p-3 rounded-lg max-h-32 overflow-y-auto whitespace-pre-wrap">
             {actionOutput}
           </div>
         )}
@@ -1178,47 +1178,47 @@ function AddProjectModal({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Project</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+      <div className="bg-[#141414] rounded-xl shadow-2xl shadow-black/40 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 border-b border-[#1f1f1f]">
+          <h2 className="text-lg font-semibold text-gray-100">New Project</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm flex items-center gap-2">
+            <div className="bg-red-900/20 text-red-400 p-3 rounded-lg text-sm flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </div>
           )}
 
           {/* Project Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Name *</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Project Name *</label>
             <input
               type="text"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
               placeholder="My App"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
             />
           </div>
 
           {/* Project Path */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Path *</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Project Path *</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={form.path}
                 onChange={e => setForm({ ...form, path: e.target.value })}
                 placeholder="/var/www/html/myapp"
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
               />
               <button
                 onClick={() => { setShowDirBrowser(!showDirBrowser); if (!showDirBrowser) fetchDir(currentBrowsePath); }}
-                className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                className="px-3 py-2 rounded-lg bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f] transition"
               >
                 <FolderOpen className="w-4 h-4" />
               </button>
@@ -1226,14 +1226,14 @@ function AddProjectModal({ onClose, onCreated }) {
 
             {/* Directory Browser */}
             {showDirBrowser && (
-              <div className="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 p-3">
+              <div className="mt-2 border border-[#1f1f1f] rounded-lg bg-[#111111] p-3">
                 <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
-                  <button onClick={() => fetchDir('/')} className="hover:text-blue-500"><Home className="w-3 h-3" /></button>
+                  <button onClick={() => fetchDir('/')} className="hover:text-lava-400"><Home className="w-3 h-3" /></button>
                   {currentBrowsePath.split('/').filter(Boolean).map((part, i, arr) => (
                     <React.Fragment key={i}>
                       <ChevronRight className="w-3 h-3" />
                       <button
-                        className="hover:text-blue-500"
+                        className="hover:text-lava-400"
                         onClick={() => fetchDir('/' + arr.slice(0, i + 1).join('/'))}
                       >
                         {part}
@@ -1243,7 +1243,7 @@ function AddProjectModal({ onClose, onCreated }) {
                 </div>
                 <button
                   onClick={() => setForm({ ...form, path: currentBrowsePath })}
-                  className="text-xs text-blue-500 hover:text-blue-600 mb-2 block"
+                  className="text-xs text-lava-400 hover:text-lava-500 mb-2 block"
                 >
                   ✓ Select this folder: {currentBrowsePath}
                 </button>
@@ -1257,7 +1257,7 @@ function AddProjectModal({ onClose, onCreated }) {
                       <button
                         key={i}
                         onClick={() => fetchDir(currentBrowsePath === '/' ? `/${d.name}` : `${currentBrowsePath}/${d.name}`)}
-                        className="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        className="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-[#1f1f1f] hover:bg-[#1a1a1a] text-gray-300"
                       >
                         <FolderOpen className="w-3 h-3 text-yellow-500" /> {d.name}
                       </button>
@@ -1270,7 +1270,7 @@ function AddProjectModal({ onClose, onCreated }) {
 
           {/* Git URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Git Repository URL <span className="text-gray-400 font-normal">(optional — will clone)</span>
             </label>
             <input
@@ -1278,14 +1278,14 @@ function AddProjectModal({ onClose, onCreated }) {
               value={form.gitUrl}
               onChange={e => setForm({ ...form, gitUrl: e.target.value })}
               placeholder="https://github.com/user/repo.git"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
             />
           </div>
 
           {/* Branch */}
           {form.gitUrl && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Branch
                 {branchLoading && <Loader className="w-3 h-3 animate-spin inline ml-2" />}
               </label>
@@ -1293,7 +1293,7 @@ function AddProjectModal({ onClose, onCreated }) {
                 <select
                   value={form.branch}
                   onChange={e => setForm({ ...form, branch: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
                 >
                   {remoteBranches.map(b => (
                     <option key={b} value={b}>{b}</option>
@@ -1306,7 +1306,7 @@ function AddProjectModal({ onClose, onCreated }) {
                     value={form.branch}
                     onChange={e => setForm({ ...form, branch: e.target.value })}
                     placeholder="main"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
                   />
                   {branchError && (
                     <p className="text-xs text-yellow-500 mt-1">{branchError}</p>
@@ -1318,14 +1318,14 @@ function AddProjectModal({ onClose, onCreated }) {
 
           {/* Domain Association */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Associated Domain <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             {sitesList.length > 0 ? (
               <select
                 value={form.domain}
                 onChange={e => setForm({ ...form, domain: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
               >
                 <option value="">None</option>
                 {sitesList.map((site, i) => (
@@ -1340,21 +1340,21 @@ function AddProjectModal({ onClose, onCreated }) {
                 value={form.domain}
                 onChange={e => setForm({ ...form, domain: e.target.value })}
                 placeholder="myapp.example.com"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
               />
             )}
           </div>
 
           {/* PM2 Association */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Associated PM2 Process <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             {pm2List.length > 0 ? (
               <select
                 value={form.pm2Name}
                 onChange={e => setForm({ ...form, pm2Name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
               >
                 <option value="">None</option>
                 {pm2List.map((proc, i) => (
@@ -1367,23 +1367,23 @@ function AddProjectModal({ onClose, onCreated }) {
                 value={form.pm2Name}
                 onChange={e => setForm({ ...form, pm2Name: e.target.value })}
                 placeholder="my-app-server"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500"
               />
             )}
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end gap-3 p-5 border-t border-[#1f1f1f]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+            className="px-4 py-2 text-sm rounded-lg bg-[#1a1a1a] text-gray-300 hover:bg-[#1f1f1f] transition"
           >
             Cancel
           </button>
           <button
             onClick={submit}
             disabled={loading}
-            className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 text-sm rounded-lg bg-lava-600 text-white hover:bg-lava-700 transition flex items-center gap-2 disabled:opacity-50"
           >
             {loading && <Loader className="w-4 h-4 animate-spin" />}
             {form.gitUrl ? 'Clone & Create' : 'Create Project'}
@@ -1629,31 +1629,31 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-[#141414] rounded-xl shadow-2xl shadow-black/40 w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-5 border-b border-[#1f1f1f]">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <FolderGit2 className="w-5 h-5 text-blue-500" />
+            <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2">
+              <FolderGit2 className="w-5 h-5 text-lava-400" />
               {project.name}
             </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono">{project.path}</p>
+            <p className="text-xs text-gray-500 mt-1 font-mono">{project.path}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-400 p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 px-5">
+        <div className="flex border-b border-[#1f1f1f] px-5">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  ? 'border-lava-500 text-lava-500'
+                  : 'border-transparent text-gray-500 hover:text-gray-300'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -1669,34 +1669,34 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
           {activeTab === 'overview' && (
             <div className="space-y-5">
               {currentBranch && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-[#111111] rounded-lg">
                   <GitBranch className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Branch:</span>
-                  <span className="text-sm font-mono text-blue-600 dark:text-blue-400">{currentBranch}</span>
+                  <span className="text-sm font-medium text-gray-300">Current Branch:</span>
+                  <span className="text-sm font-mono text-lava-500">{currentBranch}</span>
                 </div>
               )}
 
               {/* Associated Site */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-blue-500" /> Associated Site
+              <div className="p-4 bg-[#111111] rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-lava-400" /> Associated Site
                 </h4>
                 {project.domain ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{project.domain}</span>
+                      <span className="text-sm text-gray-400">{project.domain}</span>
                       <div className="flex items-center gap-2">
                         {associatedSite ? (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-700">
                             Hosted
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-700">
                             Not configured
                           </span>
                         )}
                         <a href={`http://${project.domain}`} target="_blank" rel="noopener noreferrer"
-                          className="text-blue-500 hover:text-blue-600 text-xs flex items-center gap-1">
+                          className="text-lava-400 hover:text-lava-500 text-xs flex items-center gap-1">
                           <ExternalLink className="w-3 h-3" /> Visit
                         </a>
                       </div>
@@ -1711,19 +1711,19 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
               </div>
 
               {/* PM2 Process */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <div className="p-4 bg-[#111111] rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-green-500" /> PM2 Process
                 </h4>
                 {project.pm2Name ? (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-mono text-gray-600 dark:text-gray-400">{project.pm2Name}</span>
+                    <span className="text-sm font-mono text-gray-400">{project.pm2Name}</span>
                     {associatedPm2 ? (
                       <div className="flex items-center gap-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                           associatedPm2.pm2_env?.status === 'online'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-green-900/30 text-green-700'
+                            : 'bg-red-900/30 text-red-700'
                         }`}>{associatedPm2.pm2_env?.status || 'unknown'}</span>
                         {associatedPm2.pm2_env?.status === 'online' && (
                           <span className="text-xs text-gray-400">
@@ -1742,20 +1742,20 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
 
               {/* Git Remote */}
               {project.gitUrl && (
-                <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <div className="p-4 bg-[#111111] rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
                     <Github className="w-4 h-4" /> Repository
                   </h4>
                   <a href={project.gitUrl.replace(/\.git$/, '')} target="_blank" rel="noopener noreferrer"
-                    className="text-sm text-blue-500 hover:underline flex items-center gap-1">
+                    className="text-sm text-lava-400 hover:underline flex items-center gap-1">
                     {project.gitUrl} <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
               )}
 
               {/* Env Quick View */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <div className="p-4 bg-[#111111] rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
                   <Key className="w-4 h-4 text-yellow-500" /> Environment Variables
                   <span className="text-xs font-normal text-gray-400">(.env)</span>
                 </h4>
@@ -1764,12 +1764,12 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                 ) : envExists ? (
                   <div className="text-xs text-gray-500">
                     {envPairs.length} variable{envPairs.length !== 1 ? 's' : ''} defined
-                    <button onClick={() => setActiveTab('env')} className="text-blue-500 hover:underline ml-2">Edit</button>
+                    <button onClick={() => setActiveTab('env')} className="text-lava-400 hover:underline ml-2">Edit</button>
                   </div>
                 ) : (
                   <div className="text-xs text-gray-400">
                     No .env file.
-                    <button onClick={() => setActiveTab('env')} className="text-blue-500 hover:underline ml-2">Create one</button>
+                    <button onClick={() => setActiveTab('env')} className="text-lava-400 hover:underline ml-2">Create one</button>
                   </div>
                 )}
               </div>
@@ -1780,13 +1780,13 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
           {activeTab === 'branches' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Branches</h4>
-                <button onClick={fetchBranches} className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1">
+                <h4 className="text-sm font-semibold text-gray-300">Branches</h4>
+                <button onClick={fetchBranches} className="text-xs text-lava-400 hover:text-lava-500 flex items-center gap-1">
                   <RefreshCw className="w-3 h-3" /> Refresh
                 </button>
               </div>
               {branchLoading ? (
-                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-blue-500" /></div>
+                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-lava-400" /></div>
               ) : branches.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-8">No branches found</p>
               ) : (
@@ -1800,27 +1800,27 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                         key={branch}
                         className={`flex items-center justify-between px-4 py-2.5 rounded-lg transition ${
                           isCurrent
-                            ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                            : 'bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            ? 'bg-lava-900/20 bg-lava-900/20 border border-lava-600/30'
+                            : 'bg-[#111111] hover:bg-[#1a1a1a]'
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <GitBranch className={`w-4 h-4 ${isCurrent ? 'text-blue-500' : 'text-gray-400'}`} />
-                          <span className={`text-sm font-mono ${isCurrent ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}>
+                          <GitBranch className={`w-4 h-4 ${isCurrent ? 'text-lava-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm font-mono ${isCurrent ? 'text-lava-500 font-semibold' : 'text-gray-300'}`}>
                             {cleanName}
                           </span>
                           {isCurrent && (
-                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium">CURRENT</span>
+                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-lava-900/30 text-lava-500 font-medium">CURRENT</span>
                           )}
                           {isRemote && !isCurrent && (
-                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-gray-200 dark:bg-gray-700 text-gray-500 font-medium">REMOTE</span>
+                            <span className="px-1.5 py-0.5 text-[10px] rounded bg-[#1f1f1f] bg-[#1a1a1a] text-gray-500 font-medium">REMOTE</span>
                           )}
                         </div>
                         {!isCurrent && (
                           <button
                             onClick={() => checkoutBranch(branch)}
                             disabled={!!checkoutLoading}
-                            className="px-3 py-1 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+                            className="px-3 py-1 text-xs rounded-lg bg-lava-600 text-white hover:bg-lava-700 transition disabled:opacity-50"
                           >
                             {checkoutLoading === cleanName ? <Loader className="w-3 h-3 animate-spin" /> : 'Checkout'}
                           </button>
@@ -1837,13 +1837,13 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
           {activeTab === 'env' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
                   <Key className="w-4 h-4 text-yellow-500" /> .env File
                   {envDirty && <span className="text-yellow-500 text-xs">● Unsaved</span>}
                 </h4>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setShowEnvValues(!showEnvValues)}
-                    className="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+                    className="p-1.5 rounded text-gray-400 hover:text-gray-400 transition"
                     title={showEnvValues ? 'Hide values' : 'Show values'}>
                     {showEnvValues ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -1856,23 +1856,23 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
               </div>
 
               {envLoading ? (
-                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-blue-500" /></div>
+                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-lava-400" /></div>
               ) : (
                 <>
                   {envPairs.length > 0 && (
-                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div className="bg-[#111111] rounded-lg border border-[#1f1f1f] overflow-hidden">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <tr className="border-b border-[#1f1f1f]">
                             <th className="text-left px-3 py-2 text-gray-500 font-medium">Key</th>
                             <th className="text-left px-3 py-2 text-gray-500 font-medium">Value</th>
                           </tr>
                         </thead>
                         <tbody>
                           {envPairs.map((pair, i) => (
-                            <tr key={i} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
-                              <td className="px-3 py-1.5 font-mono text-blue-600 dark:text-blue-400">{pair.key}</td>
-                              <td className="px-3 py-1.5 font-mono text-gray-600 dark:text-gray-400">
+                            <tr key={i} className="border-b border-gray-100 border-[#1a1a1a] last:border-0">
+                              <td className="px-3 py-1.5 font-mono text-lava-500">{pair.key}</td>
+                              <td className="px-3 py-1.5 font-mono text-gray-400">
                                 {showEnvValues ? pair.value : '••••••••'}
                               </td>
                             </tr>
@@ -1889,7 +1889,7 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                       onChange={e => { setEnvContent(e.target.value); setEnvDirty(true); }}
                       placeholder={"# Environment Variables\nDB_HOST=localhost\nDB_PORT=3306\nSECRET_KEY=your-secret"}
                       rows={12}
-                      className="w-full px-3 py-2 font-mono text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-950 text-green-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                      className="w-full px-3 py-2 font-mono text-xs rounded-lg border border-[#252525] bg-gray-950 text-green-400 focus:ring-2 focus:ring-lava-500 focus:border-transparent resize-y"
                       spellCheck={false}
                     />
                   </div>
@@ -1902,12 +1902,12 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
           {activeTab === 'apache' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
                   <Server className="w-4 h-4 text-red-500" /> Apache Virtual Host Config
                   {apacheDirty && <span className="text-yellow-500 text-xs">● Unsaved</span>}
                 </h4>
                 <div className="flex items-center gap-2">
-                  <button onClick={fetchApacheConfig} className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1">
+                  <button onClick={fetchApacheConfig} className="text-xs text-lava-400 hover:text-lava-500 flex items-center gap-1">
                     <RefreshCw className="w-3 h-3" /> Refresh
                   </button>
                   {apacheConfig && (
@@ -1921,24 +1921,24 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
               </div>
 
               {apacheLoading ? (
-                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-blue-500" /></div>
+                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-lava-400" /></div>
               ) : !apacheConfig ? (
-                <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <Server className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <div className="text-center py-8 bg-[#111111] rounded-lg">
+                  <Server className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                   <p className="text-sm text-gray-500">No Apache config found for this project.</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Create a site with domain <span className="font-mono text-blue-500">{project.domain || 'your-domain.com'}</span> pointing to <span className="font-mono text-blue-500">{project.path}</span>
+                    Create a site with domain <span className="font-mono text-lava-400">{project.domain || 'your-domain.com'}</span> pointing to <span className="font-mono text-lava-400">{project.path}</span>
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {/* Config info bar */}
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-sm">
-                    <span className="text-gray-600 dark:text-gray-400 font-mono">{apacheConfig.name}.conf</span>
+                  <div className="flex items-center gap-3 p-3 bg-[#111111] rounded-lg text-sm">
+                    <span className="text-gray-400 font-mono">{apacheConfig.name}.conf</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       apacheConfig.enabled
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                        ? 'bg-green-900/30 text-green-700'
+                        : 'bg-[#1f1f1f] text-gray-400 bg-[#1a1a1a] text-gray-500'
                     }`}>
                       {apacheConfig.enabled ? 'Enabled' : 'Disabled'}
                     </span>
@@ -1949,7 +1949,7 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                     value={apacheConfigContent}
                     onChange={e => { setApacheConfigContent(e.target.value); setApacheDirty(true); }}
                     rows={18}
-                    className="w-full px-3 py-2 font-mono text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-950 text-green-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                    className="w-full px-3 py-2 font-mono text-xs rounded-lg border border-[#252525] bg-gray-950 text-green-400 focus:ring-2 focus:ring-lava-500 focus:border-transparent resize-y"
                     spellCheck={false}
                   />
                 </div>
@@ -1961,28 +1961,28 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
           {activeTab === 'pm2' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-green-500" /> PM2 Processes
                 </h4>
-                <button onClick={fetchPm2Detail} className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1">
+                <button onClick={fetchPm2Detail} className="text-xs text-lava-400 hover:text-lava-500 flex items-center gap-1">
                   <RefreshCw className="w-3 h-3" /> Refresh
                 </button>
               </div>
 
               {pm2Loading ? (
-                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-blue-500" /></div>
+                <div className="flex justify-center py-8"><Loader className="w-5 h-5 animate-spin text-lava-400" /></div>
               ) : !pm2Detail ? (
-                <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <Activity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <div className="text-center py-8 bg-[#111111] rounded-lg">
+                  <Activity className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                   <p className="text-sm text-gray-500">No PM2 processes found for this project.</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Start a process with working directory <span className="font-mono text-blue-500">{project.path}</span> or associate one in Settings.
+                    Start a process with working directory <span className="font-mono text-lava-400">{project.path}</span> or associate one in Settings.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {pm2Detail.map(proc => (
-                    <div key={proc.pm_id} className="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div key={proc.pm_id} className="bg-[#111111] rounded-lg border border-[#1f1f1f] overflow-hidden">
                       {/* Process header */}
                       <div className="flex items-center justify-between p-4">
                         <div className="flex items-center gap-3">
@@ -1991,13 +1991,13 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                             proc.pm2_env?.status === 'stopping' ? 'bg-yellow-500' : 'bg-red-500'
                           }`} />
                           <div>
-                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{proc.name}</span>
+                            <span className="text-sm font-semibold text-gray-200 text-gray-300">{proc.name}</span>
                             <span className="text-xs text-gray-400 ml-2">ID: {proc.pm_id}</span>
                           </div>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             proc.pm2_env?.status === 'online'
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-green-900/30 text-green-700'
+                              : 'bg-red-900/30 text-red-700'
                           }`}>
                             {proc.pm2_env?.status || 'unknown'}
                           </span>
@@ -2007,7 +2007,7 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                             <>
                               <button onClick={() => pm2Control(proc.name, 'restart')}
                                 disabled={!!pm2ActionLoading}
-                                className="px-2.5 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1 disabled:opacity-50"
+                                className="px-2.5 py-1.5 text-xs rounded-lg bg-lava-600 text-white hover:bg-lava-700 transition flex items-center gap-1 disabled:opacity-50"
                                 title="Restart">
                                 {pm2ActionLoading === `restart-${proc.name}` ? <Loader className="w-3 h-3 animate-spin" /> : <RotateCw className="w-3 h-3" />}
                                 Restart
@@ -2034,17 +2034,17 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
 
                       {/* Process stats */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 pb-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700">
+                        <div className="bg-[#141414] rounded-lg p-2.5 border border-gray-100 border-[#1f1f1f]">
                           <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">CPU</div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{proc.monit?.cpu || 0}%</div>
+                          <div className="text-sm font-semibold text-gray-200 text-gray-300">{proc.monit?.cpu || 0}%</div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700">
+                        <div className="bg-[#141414] rounded-lg p-2.5 border border-gray-100 border-[#1f1f1f]">
                           <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Memory</div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{((proc.monit?.memory || 0) / 1024 / 1024).toFixed(1)} MB</div>
+                          <div className="text-sm font-semibold text-gray-200 text-gray-300">{((proc.monit?.memory || 0) / 1024 / 1024).toFixed(1)} MB</div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700">
+                        <div className="bg-[#141414] rounded-lg p-2.5 border border-gray-100 border-[#1f1f1f]">
                           <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Uptime</div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          <div className="text-sm font-semibold text-gray-200 text-gray-300">
                             {proc.pm2_env?.pm_uptime ? (() => {
                               const ms = Date.now() - proc.pm2_env.pm_uptime;
                               const h = Math.floor(ms / 3600000);
@@ -2053,29 +2053,29 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                             })() : '-'}
                           </div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700">
+                        <div className="bg-[#141414] rounded-lg p-2.5 border border-gray-100 border-[#1f1f1f]">
                           <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Restarts</div>
-                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">{proc.pm2_env?.restart_time || 0}</div>
+                          <div className="text-sm font-semibold text-gray-200 text-gray-300">{proc.pm2_env?.restart_time || 0}</div>
                         </div>
                       </div>
 
                       {/* Process details */}
-                      <div className="px-4 pb-4 space-y-1.5 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <div className="px-4 pb-4 space-y-1.5 text-xs text-gray-500 border-t border-[#1f1f1f] pt-3">
                         <div className="flex gap-2">
                           <span className="text-gray-400 w-16 flex-shrink-0">Script:</span>
-                          <span className="font-mono text-gray-600 dark:text-gray-300 truncate">{proc.pm2_env?.pm_exec_path || '-'}</span>
+                          <span className="font-mono text-gray-400 truncate">{proc.pm2_env?.pm_exec_path || '-'}</span>
                         </div>
                         <div className="flex gap-2">
                           <span className="text-gray-400 w-16 flex-shrink-0">CWD:</span>
-                          <span className="font-mono text-gray-600 dark:text-gray-300 truncate">{proc.pm2_env?.pm_cwd || '-'}</span>
+                          <span className="font-mono text-gray-400 truncate">{proc.pm2_env?.pm_cwd || '-'}</span>
                         </div>
                         <div className="flex gap-2">
                           <span className="text-gray-400 w-16 flex-shrink-0">Node:</span>
-                          <span className="font-mono text-gray-600 dark:text-gray-300">{proc.pm2_env?.node_version || '-'}</span>
+                          <span className="font-mono text-gray-400">{proc.pm2_env?.node_version || '-'}</span>
                         </div>
                         <div className="flex gap-2">
                           <span className="text-gray-400 w-16 flex-shrink-0">Mode:</span>
-                          <span className="font-mono text-gray-600 dark:text-gray-300">{proc.pm2_env?.exec_mode || '-'}</span>
+                          <span className="font-mono text-gray-400">{proc.pm2_env?.exec_mode || '-'}</span>
                         </div>
                       </div>
                     </div>
@@ -2089,10 +2089,10 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
           {activeTab === 'settings' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Associated Domain</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Associated Domain</label>
                 {sitesList.length > 0 ? (
                   <select value={editForm.domain} onChange={e => setEditForm({ ...editForm, domain: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500">
+                    className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500">
                     <option value="">None</option>
                     {sitesList.map((site, i) => (
                       <option key={i} value={site.domain || site.name}>{site.domain || site.name}</option>
@@ -2101,15 +2101,15 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                 ) : (
                   <input type="text" value={editForm.domain} onChange={e => setEditForm({ ...editForm, domain: e.target.value })}
                     placeholder="myapp.example.com"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500" />
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PM2 Process</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">PM2 Process</label>
                 {pm2List.length > 0 ? (
                   <select value={editForm.pm2Name} onChange={e => setEditForm({ ...editForm, pm2Name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500">
+                    className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500">
                     <option value="">None</option>
                     {pm2List.map((proc, i) => (
                       <option key={i} value={proc.name}>{proc.name} ({proc.pm2_env?.status})</option>
@@ -2118,19 +2118,19 @@ function ProjectDetailView({ project, onClose, onUpdated }) {
                 ) : (
                   <input type="text" value={editForm.pm2Name} onChange={e => setEditForm({ ...editForm, pm2Name: e.target.value })}
                     placeholder="my-app-server"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500" />
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Git Repository URL</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Git Repository URL</label>
                 <input type="text" value={editForm.gitUrl} onChange={e => setEditForm({ ...editForm, gitUrl: e.target.value })}
                   placeholder="https://github.com/user/repo.git"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 rounded-lg border border-[#252525] bg-[#141414] bg-[#0e0e0e] text-gray-100 text-sm focus:ring-2 focus:ring-lava-500" />
               </div>
 
               <button onClick={saveProjectSettings} disabled={saving}
-                className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50">
+                className="px-4 py-2 text-sm rounded-lg bg-lava-600 text-white hover:bg-lava-700 transition flex items-center gap-2 disabled:opacity-50">
                 {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Settings
               </button>

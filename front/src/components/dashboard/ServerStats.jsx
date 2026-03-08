@@ -61,20 +61,20 @@ export default function ServerStats() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Real-Time Server Performance</h3>
+    <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-6">
+      <h3 className="text-lg font-semibold text-white mb-6">Real-Time Server Performance</h3>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* CPU Usage Chart */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-blue-500 text-white mr-3">
+              <div className="p-2 rounded-lg bg-lava-600 text-white mr-3">
                 <Cpu className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">CPU Usage</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-gray-400">CPU Usage</p>
+                <p className="text-xl font-bold text-white">
                   {currentStats.cpu.usage.toFixed(1)}%
                   <span className="text-xs font-normal text-gray-500 ml-2">({currentStats.cpu.cores} cores)</span>
                 </p>
@@ -84,18 +84,18 @@ export default function ServerStats() {
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={cpuData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#6B7280" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#6B7280" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+                <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#333333" />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#333333" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                    backgroundColor: '#141414', 
                     border: 'none', 
                     borderRadius: '8px',
                     color: '#fff'
                   }} 
                 />
-                <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="value" stroke="#f97316" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -105,12 +105,12 @@ export default function ServerStats() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-green-500 text-white mr-3">
+              <div className="p-2 rounded-lg bg-ember-600 text-white mr-3">
                 <HardDrive className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Memory Usage</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-gray-400">Memory Usage</p>
+                <p className="text-xl font-bold text-white">
                   {currentStats.memory.percentage.toFixed(1)}%
                   <span className="text-xs font-normal text-gray-500 ml-2">
                     ({currentStats.memory.used}/{currentStats.memory.total} GB)
@@ -122,18 +122,18 @@ export default function ServerStats() {
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={memoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#6B7280" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#6B7280" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+                <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#333333" />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#333333" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                    backgroundColor: '#141414', 
                     border: 'none', 
                     borderRadius: '8px',
                     color: '#fff'
                   }} 
                 />
-                <Line type="monotone" dataKey="value" stroke="#10B981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -143,12 +143,12 @@ export default function ServerStats() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-yellow-500 text-white mr-3">
+              <div className="p-2 rounded-lg bg-amber-600 text-white mr-3">
                 <Activity className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Disk Usage</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-gray-400">Disk Usage</p>
+                <p className="text-xl font-bold text-white">
                   {currentStats.disk.percentage}%
                   <span className="text-xs font-normal text-gray-500 ml-2">
                     ({currentStats.disk.used}/{currentStats.disk.total})
@@ -160,18 +160,18 @@ export default function ServerStats() {
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={diskData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#6B7280" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#6B7280" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+                <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#333333" />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} stroke="#333333" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
+                    backgroundColor: '#141414', 
                     border: 'none', 
                     borderRadius: '8px',
                     color: '#fff'
                   }} 
                 />
-                <Line type="monotone" dataKey="value" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="value" stroke="#fb923c" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -181,24 +181,24 @@ export default function ServerStats() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="p-2 rounded-lg bg-purple-500 text-white mr-3">
+              <div className="p-2 rounded-lg bg-lava-700 text-white mr-3">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Server Uptime</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm font-medium text-gray-400">Server Uptime</p>
+                <p className="text-xl font-bold text-white">
                   {formatUptime(currentStats.uptime.seconds)}
                 </p>
               </div>
             </div>
           </div>
-          <div className="h-32 flex items-center justify-center bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+          <div className="h-32 flex items-center justify-center bg-lava-900/20 rounded-lg border border-lava-800/20">
             <div className="text-center">
-              <Clock className="w-12 h-12 text-purple-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <Clock className="w-12 h-12 text-lava-500 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-lava-400">
                 {formatUptime(currentStats.uptime.seconds)}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">System Running Time</p>
+              <p className="text-xs text-gray-500 mt-1">System Running Time</p>
             </div>
           </div>
         </div>

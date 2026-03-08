@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -151,6 +152,9 @@ app.use('/projects', projectsRoutes);
 app.post('/files/upload', upload.array('files'), (req, res) => {
   const { targetPath } = req.body;
   const files = req.files;
+  const relativePaths = req.body.relativePaths
+    ? (Array.isArray(req.body.relativePaths) ? req.body.relativePaths : [req.body.relativePaths])
+    : [];
 
   if (!targetPath) {
     return res.status(400).json({ success: false, error: 'targetPath required' });
@@ -165,20 +169,21 @@ app.post('/files/upload', upload.array('files'), (req, res) => {
   }
 
   try {
-    // Ensure target directory exists
     if (!fs.existsSync(targetPath)) {
       fs.mkdirSync(targetPath, { recursive: true });
     }
 
     const uploadedFiles = [];
-    for (const file of files) {
-      const destPath = path.join(targetPath, file.originalname);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const relPath = relativePaths[i] || file.originalname;
+      const destPath = path.join(targetPath, relPath);
+      const destDir = path.dirname(destPath);
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
       fs.renameSync(file.path, destPath);
-      uploadedFiles.push({
-        name: file.originalname,
-        path: destPath,
-        size: file.size
-      });
+      uploadedFiles.push({ name: file.originalname, path: destPath, size: file.size });
     }
 
     res.json({ success: true, files: uploadedFiles });

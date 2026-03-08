@@ -3,10 +3,10 @@ import { Plus, RefreshCw, Shield, Database, Settings, Monitor, Globe } from 'luc
 import DNSConfigModal from '../sites/DNSConfigModal.jsx';
 
 const actions = [
-  { id: 'add-site', title: 'Add New Site', description: 'Create a new website or subdomain', icon: Plus, color: 'bg-blue-500 hover:bg-blue-600' },
-  { id: 'dns-config', title: 'DNS Configuration', description: 'Configure domain DNS settings', icon: Globe, color: 'bg-indigo-500 hover:bg-indigo-600' },
-  { id: 'restart-services', title: 'Restart Services', description: 'Restart Apache/Nginx services', icon: RefreshCw, color: 'bg-green-500 hover:bg-green-600' },
-  { id: 'security-scan', title: 'Security Scan', description: 'Run security vulnerability check', icon: Shield, color: 'bg-purple-500 hover:bg-purple-600' },
+  { id: 'add-site', title: 'Add New Site', description: 'Create a new website or subdomain', icon: Plus, color: 'bg-lava-600 hover:bg-lava-500' },
+  { id: 'dns-config', title: 'DNS Configuration', description: 'Configure domain DNS settings', icon: Globe, color: 'bg-lava-700 hover:bg-lava-600' },
+  { id: 'restart-services', title: 'Restart Services', description: 'Restart Apache/Nginx services', icon: RefreshCw, color: 'bg-ember-700 hover:bg-ember-600' },
+  { id: 'security-scan', title: 'Security Scan', description: 'Run security vulnerability check', icon: Shield, color: 'bg-amber-700 hover:bg-amber-600' },
 ];
 
 export default function QuickActions({ onAddSite }) {
@@ -37,8 +37,8 @@ export default function QuickActions({ onAddSite }) {
   };
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Quick Actions</h3>
+      <div className="bg-[#141414] rounded-xl shadow-sm shadow-black/20 border border-[#1f1f1f] p-6">
+        <h3 className="text-lg font-semibold text-white mb-6">Quick Actions</h3>
         <div className="space-y-3">
           {actions.map((action) => {
             const Icon = action.icon;
@@ -46,14 +46,14 @@ export default function QuickActions({ onAddSite }) {
               <button 
                 key={action.id} 
                 onClick={() => handleAction(action.id)}
-                className="w-full flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                className="w-full flex items-center p-3 rounded-lg border border-[#1f1f1f] hover:bg-[#1a1a1a] hover:border-lava-800/50 transition-all group"
               >
-                <div className={`p-2 rounded-lg ${action.color} text-white mr-3 transition-colors`}>
+                <div className={`p-2 rounded-lg ${action.color} text-white mr-3 transition-all`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{action.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{action.description}</p>
+                  <p className="text-sm font-medium text-white">{action.title}</p>
+                  <p className="text-xs text-gray-500">{action.description}</p>
                 </div>
               </button>
             );
