@@ -1,0 +1,14 @@
+[
+  {
+    "id": "mmsfbew8qi8q4mihx",
+    "name": "test",
+    "type": "mysql",
+    "host": "127.0.0.1",
+    "port": null,
+    "user": "paneladmin",
+    "password": "YourStrongAdminPass123!",
+    "database": "",
+    "uri": "",
+    "createdAt": "2026-03-16T00:06:41.192Z"
+  }
+]

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Globe, FolderOpen, Terminal, Brain, Server, Activity, Settings, FolderGit2 } from 'lucide-react';
+import { LayoutDashboard, Globe, FolderOpen, Terminal, Brain, Server, Activity, Settings, FolderGit2, Database } from 'lucide-react';
 
 const navigation = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
@@ -8,6 +8,7 @@ const navigation = [
   { id: 'sites', name: 'Sites', icon: Globe },
   { id: 'files', name: 'Files', icon: FolderOpen },
   { id: 'pm2', name: 'PM2 Manager', icon: Activity },  
+  { id: 'databases', name: 'Databases', icon: Database },
   { id: 'terminal', name: 'Terminal', icon: Terminal },
   { id: 'ai-insights', name: 'AI Insights', icon: Brain },
 ];

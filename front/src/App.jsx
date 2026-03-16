@@ -11,6 +11,7 @@ import ApacheConfig from './components/apache/ApacheConfig.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import AIInsights from './components/ai/AIInsights.jsx';
 import Projects from './components/projects/Projects.jsx';
+import Databases from './components/databases/Databases.jsx';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -34,6 +35,8 @@ function AppContent() {
         return <Terminal />;
       case 'ai-insights':
         return <AIInsights />;
+      case 'databases':
+        return <Databases />;
       default:
         return <Dashboard />;
     }
