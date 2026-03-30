@@ -270,6 +270,21 @@ router.post('/add', (req, res) => {
     const documentRoot = `/var/www/html/${folder}`;
     const confFile = `/etc/apache2/sites-available/${subdomain}.conf`;
 
+    // If mainFile contains a path (e.g. "dist/index.html"), adjust the DocumentRoot
+    // to point at the subfolder so Apache serves files from the directory containing index.html
+    let legacyDocumentRoot = documentRoot;
+    let legacyDirectoryIndex = mainFile;
+    try {
+      const mainDir = path.dirname(mainFile || '');
+      if (mainDir && mainDir !== '.' && mainDir !== '/') {
+        legacyDocumentRoot = path.join(documentRoot, mainDir);
+        legacyDirectoryIndex = path.basename(mainFile);
+      }
+    } catch (e) {
+      legacyDocumentRoot = documentRoot;
+      legacyDirectoryIndex = mainFile;
+    }
+
     // Build command array
     const cmds = [
       `sudo mkdir -p ${documentRoot}`,
@@ -289,9 +304,9 @@ router.post('/add', (req, res) => {
     // Apache config
     const apacheConf = `<VirtualHost *:80>
   ServerName ${serverName}
-  DocumentRoot ${documentRoot}
-  DirectoryIndex ${mainFile}
-  <Directory ${documentRoot}>
+  DocumentRoot ${legacyDocumentRoot}
+  DirectoryIndex ${legacyDirectoryIndex}
+  <Directory ${legacyDocumentRoot}>
     Options +Indexes +FollowSymLinks
     AllowOverride All
     Require all granted
@@ -368,6 +383,19 @@ router.post('/create-advanced', async (req, res) => {
     const confFile = `/etc/apache2/sites-available/${fullDomain}.conf`;
 
     try {
+      // If mainFile includes a path (e.g. "dist/index.html"), serve from that subdirectory
+      let adjustedDocumentRoot = documentRoot;
+      let directoryIndex = mainFile;
+      try {
+        const mainDir = path.dirname(mainFile || '');
+        if (mainDir && mainDir !== '.' && mainDir !== '/') {
+          adjustedDocumentRoot = path.join(documentRoot, mainDir);
+          directoryIndex = path.basename(mainFile);
+        }
+      } catch (e) {
+        adjustedDocumentRoot = documentRoot;
+        directoryIndex = mainFile;
+      }
       // Step 1: Create document root and set permissions
       let setupCmds = [
         `sudo mkdir -p ${documentRoot}`,
@@ -411,17 +439,17 @@ router.post('/create-advanced', async (req, res) => {
       });
 
       // Step 3: Generate Apache virtual host configuration
-      let apacheConfig = `<VirtualHost *:80>
-    ServerName ${fullDomain}
-    DocumentRoot ${documentRoot}
-    DirectoryIndex ${mainFile}
+        let apacheConfig = `<VirtualHost *:80>
+      ServerName ${fullDomain}
+      DocumentRoot ${adjustedDocumentRoot}
+      DirectoryIndex ${directoryIndex}
 
-    <Directory ${documentRoot}>
+      <Directory ${adjustedDocumentRoot}>
         Options -Indexes +FollowSymLinks
         AllowOverride All
         Require all granted
-    </Directory>
-`;
+      </Directory>
+    `;
 
       // Add PHP configuration if needed
       if (phpVersion && phpVersion !== 'none') {

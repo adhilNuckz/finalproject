@@ -17,6 +17,7 @@ const filesRoutes = require('./routes/files');
 const serverRoutes = require('./routes/server');
 const sitesRoutes = require('./routes/sites');
 const projectsRoutes = require('./routes/projects');
+const databasesRoutes = require('./routes/databases');
 
 // Import utilities
 const { isAllowedPath } = require('./utils/security');
@@ -139,6 +140,9 @@ app.use('/server', serverRoutes);
 // Site management routes
 app.use('/sites', sitesRoutes);
 app.use('/site', sitesRoutes);
+
+// Database management routes
+app.use('/databases', databasesRoutes);
 
 // Project management routes
 app.use('/projects', projectsRoutes);
