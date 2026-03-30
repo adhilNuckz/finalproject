@@ -661,3 +661,61 @@ router.post('/create-advanced', async (req, res) => {
 });
 
 module.exports = router;
+
+// Migration endpoint: scan vhost configs and fix DocumentRoot/DirectoryIndex when index points to a subfolder (e.g., dist/index.html)
+router.post('/migrate-dist', (req, res) => {
+  try {
+    const dirs = ['/etc/apache2/sites-available', '/etc/apache2/sites-enabled'];
+    const patched = [];
+    dirs.forEach((dir) => {
+      if (!fs.existsSync(dir)) return;
+      const files = fs.readdirSync(dir).filter(f => f.endsWith('.conf'));
+      files.forEach((file) => {
+        const full = path.join(dir, file);
+        let content = fs.readFileSync(full, 'utf8');
+        if (!/DirectoryIndex\s+.*dist\/index\.html/.test(content)) return;
+
+        // Determine current DocumentRoot
+        const docMatch = content.match(/DocumentRoot\s+([^\s]+)/);
+        if (!docMatch) return;
+        const docroot = docMatch[1];
+        // If already ends with /dist, still change DirectoryIndex
+        const needsDoc = !docroot.endsWith('/dist');
+
+        let newDoc = docroot;
+        if (needsDoc) {
+          newDoc = path.join(docroot, 'dist');
+        }
+
+        // Backup original
+        const bak = `${full}.bak.migrated.${Date.now()}`;
+        fs.copyFileSync(full, bak);
+
+        // Replace DocumentRoot and <Directory> and DirectoryIndex
+        if (needsDoc) {
+          content = content.replace(new RegExp(`DocumentRoot\\s+${docroot.replace(/[-\\^$*+?.()|[\]{}]/g,'\\$&')}`), `DocumentRoot ${newDoc}`);
+          content = content.replace(new RegExp(`<Directory\\s+${docroot.replace(/[-\\^$*+?.()|[\]{}]/g,'\\$&')}>`, 'g'), `<Directory ${newDoc}>`);
+        }
+        content = content.replace(/DirectoryIndex\s+.*dist\/index\.html/, 'DirectoryIndex index.html');
+
+        fs.writeFileSync(full, content, 'utf8');
+        patched.push({ file: full, backup: bak });
+      });
+    });
+
+    // Test and reload Apache
+    exec('sudo apache2ctl configtest', (err, stdout, stderr) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: `Config test failed: ${stderr || stdout}`, patched });
+      }
+      exec('sudo systemctl reload apache2', (rerr, rout, rerrout) => {
+        if (rerr) {
+          return res.status(500).json({ success: false, error: `Reload failed: ${rerrout || rout}`, patched });
+        }
+        res.json({ success: true, patched });
+      });
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
