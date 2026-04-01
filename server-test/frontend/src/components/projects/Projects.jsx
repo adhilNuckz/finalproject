@@ -13,9 +13,9 @@ import { FitAddon } from 'xterm-addon-fit';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import io from 'socket.io-client';
 import 'xterm/css/xterm.css';
-import { API_BASE_URL, TERMINAL_URL } from '../../config.js';
 
-const API_URL = API_BASE_URL;
+const API_URL = 'http://localhost:5000';
+const TERMINAL_URL = 'http://localhost:3000';
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);

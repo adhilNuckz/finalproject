@@ -267,7 +267,7 @@ router.post('/add', (req, res) => {
       });
     }
 
-    const documentRoot = `/var/www/html/${folder}`;
+    const documentRoot = `/var/www/html/${folder}/div`;
     const confFile = `/etc/apache2/sites-available/${subdomain}.conf`;
 
     // If mainFile contains a path (e.g. "dist/index.html"), adjust the DocumentRoot

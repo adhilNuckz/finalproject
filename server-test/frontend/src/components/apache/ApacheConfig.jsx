@@ -14,7 +14,6 @@ import {
   Save,
   X
 } from 'lucide-react';
-import { API_BASE_URL } from '../../config.js';
 
 export default function ApacheConfig() {
   const [apacheStatus, setApacheStatus] = useState('unknown');
@@ -37,7 +36,7 @@ export default function ApacheConfig() {
 
   const fetchApacheStatus = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/apache/status`);
+      const response = await fetch('http://localhost:5000/api/apache/status');
       const data = await response.json();
       setApacheStatus(data.status);
     } catch (error) {
@@ -48,7 +47,7 @@ export default function ApacheConfig() {
 
   const fetchApacheLogs = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/apache/logs`);
+      const response = await fetch('http://localhost:5000/api/apache/logs');
       const data = await response.json();
       setLogs(data.logs || []);
     } catch (error) {
@@ -58,7 +57,7 @@ export default function ApacheConfig() {
 
   const fetchConfigFiles = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/apache/configs`);
+      const response = await fetch('http://localhost:5000/api/apache/configs');
       const data = await response.json();
       setConfigFiles(data.configs || []);
     } catch (error) {
@@ -69,7 +68,7 @@ export default function ApacheConfig() {
   const handleApacheControl = async (action) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/apache/control`, {
+      const response = await fetch('http://localhost:5000/api/apache/control', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })
@@ -90,7 +89,7 @@ export default function ApacheConfig() {
   const handleConfigTest = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/apache/test`);
+      const response = await fetch('http://localhost:5000/api/apache/test');
       const data = await response.json();
       setTestResult(data);
     } catch (error) {
@@ -109,7 +108,7 @@ export default function ApacheConfig() {
     
     try {
       const filename = config.name + '.conf';
-      const response = await fetch(`${API_BASE_URL}/api/apache/config/${filename}`);
+      const response = await fetch(`http://localhost:5000/api/apache/config/${filename}`);
       const data = await response.json();
       
       if (data.success) {
@@ -128,7 +127,7 @@ export default function ApacheConfig() {
     
     try {
       const filename = selectedConfig.name + '.conf';
-      const response = await fetch(`${API_BASE_URL}/api/apache/config/${filename}`, {
+      const response = await fetch(`http://localhost:5000/api/apache/config/${filename}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: editedContent })

@@ -1,0 +1,115 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install frontend dependencies
+      run: |
+        cd front
+        npm ci
+        
+    - name: Build frontend
+      run: |
+        cd front
+        npm run build
+        
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        
+    - name: Add server to known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        
+    - name: Sync files to server
+      run: |
+        # Sync backend files
+        rsync -avz --delete \
+          --exclude 'node_modules' \
+          --exclude '.env' \
+          --exclude 'uploads' \
+          --exclude '*.json' \
+          back/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/finalproject/server-test/backend/
+        
+        # Sync frontend source files
+        rsync -avz --delete \
+          --exclude 'node_modules' \
+          --exclude 'dist' \
+          --exclude '.env' \
+          front/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/var/www/finalproject/server-test/frontend/
+          
+    - name: Deploy on server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/finalproject/server-test/backend
+          
+          # Install backend dependencies
+          echo "📦 Installing backend dependencies..."
+          npm install --production
+          
+          # Build frontend
+          echo "🏗️ Building frontend..."
+          cd /var/www/finalproject/server-test/frontend
+          npm install
+          npm run build
+          
+          # Set proper permissions
+          echo "🔐 Setting permissions..."
+          chown -R www-data:www-data /var/www/finalproject/server-test/frontend/dist
+          chmod -R 755 /var/www/finalproject/server-test/frontend/dist
+          
+          # Restart PM2 service
+          echo "🔄 Restarting PM2 service..."
+          pm2 restart server-test
+          
+          # Reload Apache
+          echo "🌐 Reloading Apache..."
+          systemctl reload apache2
+          
+          echo "✅ Deployment completed successfully!"
+          
+    - name: Verify deployment
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          echo "🔍 Checking PM2 status..."
+          pm2 status server-test
+          
+          echo "🔍 Checking Apache status..."
+          systemctl status apache2 --no-pager
+          
+          echo "🔍 Recent PM2 logs..."
+          pm2 logs server-test --lines 10 --nostream
+          
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Deployment to http://${{ secrets.SERVER_IP }}:5252 successful!"
+        else
+          echo "❌ Deployment failed!"
+        fi
