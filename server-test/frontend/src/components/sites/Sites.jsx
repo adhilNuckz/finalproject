@@ -4,8 +4,8 @@ import SiteDetails from './SiteDetails.jsx';
 import AddSiteModal from './AddSiteModal.jsx';
 import { Plus } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000';
-const SOCKET_URL = 'http://localhost:5000';
+const API_BASE = 'http://142.93.220.168:5002';
+const SOCKET_URL = 'http://142.93.220.168:5002';
 
 export default function Sites() {
   const [sites, setSites] = useState([]);

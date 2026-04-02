@@ -3,7 +3,7 @@ import FileTree from './FileTree.jsx';
 import FileEditor from './FileEditor.jsx';
 import FileToolbar from './FileToolbar.jsx';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'http://142.93.220.168:5002';
 
 function mapEntriesToTree(entries, parentPath) {
   return entries.map((e, idx) => ({

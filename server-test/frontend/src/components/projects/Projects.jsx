@@ -14,8 +14,8 @@ import { WebLinksAddon } from 'xterm-addon-web-links';
 import io from 'socket.io-client';
 import 'xterm/css/xterm.css';
 
-const API_URL = 'http://localhost:5000';
-const TERMINAL_URL = 'http://localhost:3000';
+const API_URL = 'http://142.93.220.168:5002';
+const TERMINAL_URL = 'http://142.93.220.168:3002';
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);

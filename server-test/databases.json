@@ -1,0 +1,14 @@
+[
+  {
+    "id": "mnhtqhshnadwd9h8b",
+    "name": "Test",
+    "type": "mysql",
+    "host": "127.0.0.1",
+    "port": null,
+    "user": "root",
+    "password": "",
+    "database": "",
+    "uri": "",
+    "createdAt": "2026-04-02T18:44:33.809Z"
+  }
+]

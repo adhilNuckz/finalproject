@@ -9,7 +9,7 @@ export default function DomainsOverview() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'http://142.93.220.168:5002';
 
   useEffect(() => {
     fetchDomains();

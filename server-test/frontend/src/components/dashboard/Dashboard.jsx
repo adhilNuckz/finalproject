@@ -16,7 +16,7 @@ export default function Dashboard() {
 
   const fetchServerIp = async () => {
     try {
-      const response = await fetch('http://localhost:5000/server/ip');
+      const response = await fetch('http://142.93.220.168:5002/server/ip');
       const data = await response.json();
       if (data.success) {
         setServerIp(data.ip);

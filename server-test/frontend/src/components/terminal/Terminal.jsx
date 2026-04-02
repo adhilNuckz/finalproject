@@ -6,7 +6,7 @@ import { Plus, X, Download } from "lucide-react";
 import io from "socket.io-client";
 import "xterm/css/xterm.css";
 
-const SOCKET_SERVER_URL = "http://localhost:3000";
+const SOCKET_SERVER_URL = "http://142.93.220.168:3002";
 
 export default function Terminal() {
   const [sessions, setSessions] = useState([]);

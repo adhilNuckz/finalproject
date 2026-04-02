@@ -13,7 +13,7 @@ import {
   Check
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'http://142.93.220.168:5002';
 
 export default function AddSiteModal({ onClose, onCreated, isServerInterface = false }) {
   const [step, setStep] = useState(1);

@@ -23,7 +23,7 @@ export default function QuickActions({ onAddSite }) {
         break;
       case 'restart-services':
         if (confirm('Restart Apache service?')) {
-          fetch('http://localhost:5000/api/apache/control', {
+          fetch('http://142.93.220.168:5002/api/apache/control', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'restart' })
