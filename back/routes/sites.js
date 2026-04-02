@@ -156,13 +156,13 @@ router.post('/', (req, res) => {
       // After action completes, emit updated sites list
       setTimeout(() => {
         try {
-          const availableDir = '${APACHE_SITES_AVAILABLE}';
+          const availableDir = `${APACHE_SITES_AVAILABLE}`;
           const availableSites = fs
             .readdirSync(availableDir)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           const enabledSites = fs
-            .readdirSync('${APACHE_SITES_ENABLED}')
+            .readdirSync(`${APACHE_SITES_ENABLED}`)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           
@@ -192,8 +192,8 @@ router.post('/', (req, res) => {
 
 // GET all sites with status
 router.get('/', (req, res) => {
-  const availableDir = '${APACHE_SITES_AVAILABLE}';
-  const enabledDir = '${APACHE_SITES_ENABLED}';
+  const availableDir = `${APACHE_SITES_AVAILABLE}`;
+  const enabledDir = `${APACHE_SITES_ENABLED}`;
 
   try {
     const availableSites = fs
@@ -616,13 +616,13 @@ router.post('/create-advanced', async (req, res) => {
       // Update sites list via socket
       setTimeout(() => {
         try {
-          const availableDir = '${APACHE_SITES_AVAILABLE}';
+          const availableDir = `${APACHE_SITES_AVAILABLE}`;
           const availableSites = fs
             .readdirSync(availableDir)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           const enabledSites = fs
-            .readdirSync('${APACHE_SITES_ENABLED}')
+            .readdirSync(`${APACHE_SITES_ENABLED}`)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           
@@ -671,7 +671,7 @@ module.exports = router;
 // Migration endpoint: scan vhost configs and fix DocumentRoot/DirectoryIndex when index points to a subfolder (e.g., dist/index.html)
 router.post('/migrate-dist', (req, res) => {
   try {
-    const dirs = ['${APACHE_SITES_AVAILABLE}', '${APACHE_SITES_ENABLED}'];
+    const dirs = [`${APACHE_SITES_AVAILABLE}`, `${APACHE_SITES_ENABLED}`];
     const patched = [];
     dirs.forEach((dir) => {
       if (!fs.existsSync(dir)) return;
