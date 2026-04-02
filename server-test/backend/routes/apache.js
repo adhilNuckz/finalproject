@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { exec } = require('child_process');
 
+const APACHE_SERVICE = process.env.APACHE_SERVICE_NAME || 'apache2';
+
 // GET Apache status
 router.get('/status', (req, res) => {
-  exec('systemctl is-active apache2', (err, stdout, stderr) => {
+  exec(`systemctl is-active ${APACHE_SERVICE}`, (err, stdout, stderr) => {
     const status = stdout.trim();
     res.json({ success: true, status: status || 'unknown' });
   });
@@ -25,7 +27,7 @@ router.post('/control', (req, res) => {
     return res.status(400).json({ success: false, error: 'Invalid action' });
   }
   
-  const cmd = `sudo systemctl ${action} apache2`;
+  const cmd = `sudo systemctl ${action} ${APACHE_SERVICE}`;
   
   runExecStream(cmd, { action }, (err, result) => {
     if (err) {
@@ -40,8 +42,8 @@ router.post('/control', (req, res) => {
 router.get('/configs', (req, res) => {
   const fs = require('fs');
   const path = require('path');
-  const availableDir = '/etc/apache2/sites-available';
-  const enabledDir = '/etc/apache2/sites-enabled';
+  const availableDir = process.env.APACHE_SITES_AVAILABLE || '/etc/apache2/sites-available';
+  const enabledDir = process.env.APACHE_SITES_ENABLED || '/etc/apache2/sites-enabled';
   
   try {
     const availableSites = fs
@@ -85,7 +87,7 @@ router.get('/logs', (req, res) => {
 
 // GET Apache config test
 router.get('/test', (req, res) => {
-  exec('sudo apache2ctl configtest', (err, stdout, stderr) => {
+  exec(`sudo ${APACHE_SERVICE}ctl configtest`, (err, stdout, stderr) => {
     const output = stdout + stderr;
     const success = output.includes('Syntax OK');
     
@@ -101,7 +103,8 @@ router.get('/test', (req, res) => {
 router.get('/config/:filename', (req, res) => {
   const { filename } = req.params;
   const fs = require('fs');
-  const configPath = `/etc/apache2/sites-available/${filename}`;
+  const availableDir = process.env.APACHE_SITES_AVAILABLE || '/etc/apache2/sites-available';
+  const configPath = `${availableDir}/${filename}`;
   
   exec(`sudo cat ${configPath}`, (err, stdout, stderr) => {
     if (err) {

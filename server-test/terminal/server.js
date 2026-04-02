@@ -10,13 +10,16 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
-// Allow local dev origins (Vite dev server + localhost)
-const allowedOrigins = [
-  'http://127.0.0.1:5173',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
+
+// Allow configured origins from environment
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [
+      'http://127.0.0.1:5173',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
 
 
 
@@ -58,9 +61,12 @@ io.on("connection", (socket) => {
   socket.on("create-session", ({ sessionId, cwd }) => {
     console.log(`Creating session: ${sessionId}${cwd ? ` (cwd: ${cwd})` : ''}`);
     
-    const sessionCwd = cwd || process.env.HOME;
+    const sessionCwd = cwd || process.env.DEFAULT_CWD || process.env.HOME;
+    const shell = process.env.DEFAULT_SHELL || "bash";
     
-    const shell = spawn("bash", [], {
+    const ptyProcess = spawn(shell, [], {
+    
+    const ptyProcess = spawn(shell, [], {
       name: "xterm-color",
       cols: 80,
       rows: 30,
@@ -70,18 +76,18 @@ io.on("connection", (socket) => {
 
     // Force cd into the target directory in case .bashrc overrides cwd
     if (cwd) {
-      shell.write(`cd ${cwd}\r`);
+      ptyProcess.write(`cd ${cwd}\r`);
     }
 
     // Store session
-    sessions.set(sessionId, shell);
+    sessions.set(sessionId, ptyProcess);
 
     // Send shell output to frontend
-    shell.onData((data) => {
+    ptyProcess.onData((data) => {
       socket.emit("output", { sessionId, data });
     });
 
-    shell.on("exit", () => {
+    ptyProcess.on("exit", () => {
       console.log(`Session ${sessionId} exited`);
       sessions.delete(sessionId);
       socket.emit("session-closed", { sessionId });
@@ -92,14 +98,14 @@ io.on("connection", (socket) => {
 
   // When user sends command from frontend
   socket.on("input", ({ sessionId, data }) => {
-    const shell = sessions.get(sessionId);
-    if (!shell) {
+    const ptyProcess = sessions.get(sessionId);
+    if (!ptyProcess) {
       console.warn(`Session ${sessionId} not found`);
       return;
     }
     
     try {
-      shell.write(data);
+      ptyProcess.write(data);
     } catch (e) {
       console.warn('Failed to write to shell', e);
     }
@@ -107,11 +113,13 @@ io.on("connection", (socket) => {
 
   // Handle resize from client
   socket.on('resize', ({ sessionId, cols, rows }) => {
-    const shell = sessions.get(sessionId);
-    if (!shell) return;
+    const ptyProcess = sessions.get(sessionId);
+    if (!ptyProcess) return;
+    const ptyProcess = sessions.get(sessionId);
+    if (!ptyProcess) return;
     
     try {
-      shell.resize(Math.max(1, cols), Math.max(1, rows));
+      ptyProcess.resize(Math.max(1, cols), Math.max(1, rows));
     } catch (e) {
       console.warn('Failed to resize pty', e);
     }
@@ -119,10 +127,10 @@ io.on("connection", (socket) => {
 
   // Close a specific session
   socket.on("close-session", ({ sessionId }) => {
-    const shell = sessions.get(sessionId);
-    if (shell) {
+    const ptyProcess = sessions.get(sessionId);
+    if (ptyProcess) {
       try {
-        shell.kill();
+        ptyProcess.kill();
       } catch (e) {
         console.warn('Failed to kill shell', e);
       }
@@ -133,9 +141,9 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected");
     // Kill all sessions for this socket
-    sessions.forEach((shell, sessionId) => {
+    sessions.forEach((ptyProcess, sessionId) => {
       try {
-        shell.kill();
+        ptyProcess.kill();
       } catch (e) {
         console.warn(`Failed to kill session ${sessionId}`, e);
       }
@@ -145,7 +153,8 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 3000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
+server.listen(PORT, HOST, () =>
+  console.log(`🚀 Terminal server running at http://${HOST}:${PORT}`)
 );

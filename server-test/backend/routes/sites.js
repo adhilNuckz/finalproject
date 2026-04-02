@@ -5,6 +5,12 @@ const fs = require('fs');
 const path = require('path');
 const { runExecStream } = require('../utils/exec');
 
+const APACHE_SITES_AVAILABLE = process.env.APACHE_SITES_AVAILABLE || '/etc/apache2/sites-available';
+const APACHE_SITES_ENABLED = process.env.APACHE_SITES_ENABLED || '/etc/apache2/sites-enabled';
+const APACHE_SERVICE = process.env.APACHE_SERVICE_NAME || 'apache2';
+const WEB_ROOT = process.env.WEB_ROOT || '/var/www/html';
+const PHP_FPM_SOCKET_PATH = process.env.PHP_FPM_SOCKET_PATH || '/run/php';
+
 // Enable / Disable / Maintenance mode for sites
 router.post('/', (req, res) => {
   const { site, action } = req.body;
@@ -14,8 +20,8 @@ router.post('/', (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing site or action' });
   }
 
-  const confFile = `/etc/apache2/sites-available/${site}.conf`;
-  const enabledFile = `/etc/apache2/sites-enabled/${site}.conf`;
+  const confFile = `${APACHE_SITES_AVAILABLE}/${site}.conf`;
+  const enabledFile = `${APACHE_SITES_ENABLED}/${site}.conf`;
 
   // Check if site is enabled
   exec(`[ -L ${enabledFile} ] && echo "enabled" || echo "disabled"`, (err, stdout) => {
@@ -34,8 +40,8 @@ router.post('/', (req, res) => {
       cmd = [
         `if [ -f ${confFile}.bak ]; then sudo mv ${confFile}.bak ${confFile}; fi`,
         `sudo a2ensite ${site}.conf`,
-        `sudo apache2ctl configtest`,
-        `sudo systemctl reload apache2`
+        `sudo ${APACHE_SERVICE}ctl configtest`,
+        `sudo systemctl reload ${APACHE_SERVICE}`
       ].join(' && ');
     } else if (action === 'disable') {
       if (!isEnabled) {
@@ -44,8 +50,8 @@ router.post('/', (req, res) => {
       // Force reload to ensure Apache stops serving this site
       cmd = [
         `sudo a2dissite ${site}.conf`,
-        `sudo apache2ctl configtest`,
-        `sudo systemctl restart apache2`
+        `sudo ${APACHE_SERVICE}ctl configtest`,
+        `sudo systemctl restart ${APACHE_SERVICE}`
       ].join(' && ');
     } else if (action === 'maintenance') {
       if (!isEnabled) {
@@ -57,9 +63,9 @@ router.post('/', (req, res) => {
       
       if (hasBackup) {
         // Restore from maintenance
-        const sslConfFile = `/etc/apache2/sites-available/${site}-le-ssl.conf`;
+        const sslConfFile = `${APACHE_SITES_AVAILABLE}/${site}-le-ssl.conf`;
         const hasSSlBackup = fs.existsSync(`${sslConfFile}.bak`);
-        const sslEnabledFile = `/etc/apache2/sites-enabled/${site}-le-ssl.conf`;
+        const sslEnabledFile = `${APACHE_SITES_ENABLED}/${site}-le-ssl.conf`;
         
         cmd = [
           // Restore HTTP config
@@ -68,8 +74,8 @@ router.post('/', (req, res) => {
           hasSSlBackup ? `sudo mv ${sslConfFile}.bak ${sslConfFile}` : 'true',
           // Re-enable SSL site if it was enabled
           hasSSlBackup && fs.existsSync(sslEnabledFile) ? `sudo a2ensite ${site}-le-ssl.conf` : 'true',
-          `sudo apache2ctl configtest`,
-          `sudo systemctl reload apache2`
+          `sudo ${APACHE_SERVICE}ctl configtest`,
+          `sudo systemctl reload ${APACHE_SERVICE}`
         ].join(' && ');
       } else {
         // Enter maintenance mode
@@ -90,8 +96,8 @@ router.post('/', (req, res) => {
         
         const maintenanceConfHTTP = `<VirtualHost *:80>
     ServerName ${serverName}
-    DocumentRoot /var/www/html/maintenance
-    <Directory /var/www/html/maintenance>
+    DocumentRoot ${WEB_ROOT}/maintenance
+    <Directory ${WEB_ROOT}/maintenance>
         Options -Indexes +FollowSymLinks
         AllowOverride None
         Require all granted
@@ -103,8 +109,8 @@ router.post('/', (req, res) => {
         const maintenanceConfHTTPS = `<IfModule mod_ssl.c>
 <VirtualHost *:443>
     ServerName ${serverName}
-    DocumentRoot /var/www/html/maintenance
-    <Directory /var/www/html/maintenance>
+    DocumentRoot ${WEB_ROOT}/maintenance
+    <Directory ${WEB_ROOT}/maintenance>
         Options -Indexes +FollowSymLinks
         AllowOverride None
         Require all granted
@@ -119,13 +125,13 @@ router.post('/', (req, res) => {
 </VirtualHost>
 </IfModule>`;
 
-        const sslConfFile = `/etc/apache2/sites-available/${site}-le-ssl.conf`;
+        const sslConfFile = `${APACHE_SITES_AVAILABLE}/${site}-le-ssl.conf`;
         const hasSSL = fs.existsSync(sslConfFile);
         
         cmd = [
           // Create maintenance directory and page
-          `sudo mkdir -p /var/www/html/maintenance`,
-          `echo '${maintenanceHTML}' | sudo tee /var/www/html/maintenance/index.html`,
+          `sudo mkdir -p ${WEB_ROOT}/maintenance`,
+          `echo '${maintenanceHTML}' | sudo tee ${WEB_ROOT}/maintenance/index.html`,
           // Backup HTTP config
           `sudo cp ${confFile} ${confFile}.bak`,
           // Backup HTTPS config if exists
@@ -133,8 +139,8 @@ router.post('/', (req, res) => {
           // Replace with maintenance configs
           `echo '${maintenanceConfHTTP}' | sudo tee ${confFile}`,
           hasSSL ? `echo '${maintenanceConfHTTPS}' | sudo tee ${sslConfFile}` : 'true',
-          `sudo apache2ctl configtest`,
-          `sudo systemctl reload apache2`
+          `sudo ${APACHE_SERVICE}ctl configtest`,
+          `sudo systemctl reload ${APACHE_SERVICE}`
         ].join(' && ');
       }
     } else {
@@ -150,13 +156,13 @@ router.post('/', (req, res) => {
       // After action completes, emit updated sites list
       setTimeout(() => {
         try {
-          const availableDir = '/etc/apache2/sites-available';
+          const availableDir = '${APACHE_SITES_AVAILABLE}';
           const availableSites = fs
             .readdirSync(availableDir)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           const enabledSites = fs
-            .readdirSync('/etc/apache2/sites-enabled')
+            .readdirSync('${APACHE_SITES_ENABLED}')
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           
@@ -186,8 +192,8 @@ router.post('/', (req, res) => {
 
 // GET all sites with status
 router.get('/', (req, res) => {
-  const availableDir = '/etc/apache2/sites-available';
-  const enabledDir = '/etc/apache2/sites-enabled';
+  const availableDir = '${APACHE_SITES_AVAILABLE}';
+  const enabledDir = '${APACHE_SITES_ENABLED}';
 
   try {
     const availableSites = fs
@@ -267,9 +273,7 @@ router.post('/add', (req, res) => {
       });
     }
 
-    const documentRoot = `/var/www/html/${folder}/div`;
-    const confFile = `/etc/apache2/sites-available/${subdomain}.conf`;
-
+    const documentRoot = `${WEB_ROOT}/${folder}`;
     // If mainFile contains a path (e.g. "dist/index.html"), adjust the DocumentRoot
     // to point at the subfolder so Apache serves files from the directory containing index.html
     let legacyDocumentRoot = documentRoot;
@@ -281,9 +285,11 @@ router.post('/add', (req, res) => {
         legacyDirectoryIndex = path.basename(mainFile);
       }
     } catch (e) {
+      // fallback to original values on error
       legacyDocumentRoot = documentRoot;
       legacyDirectoryIndex = mainFile;
     }
+    const confFile = `${APACHE_SITES_AVAILABLE}/${subdomain}.conf`;
 
     // Build command array
     const cmds = [
@@ -321,7 +327,7 @@ router.post('/add', (req, res) => {
     cmds.push(`sudo chown root:root ${confFile}`);
     cmds.push(`grep -qF '${serverName}' /etc/hosts || echo '127.0.0.1 ${serverName}' | sudo tee -a /etc/hosts`);
     cmds.push(`sudo a2ensite ${subdomain}.conf`);
-    cmds.push(`sudo systemctl reload apache2`);
+    cmds.push(`sudo systemctl reload ${APACHE_SERVICE}`);
 
     // Execute all commands
     const cmd = cmds.join(' && ');
@@ -380,7 +386,7 @@ router.post('/create-advanced', async (req, res) => {
 
     const fullDomain = `${subdomain}.${domain}`;
     const documentRoot = `${folderLocation}/${folderName}`;
-    const confFile = `/etc/apache2/sites-available/${fullDomain}.conf`;
+    const confFile = `${APACHE_SITES_AVAILABLE}/${fullDomain}.conf`;
 
     try {
       // If mainFile includes a path (e.g. "dist/index.html"), serve from that subdirectory
@@ -405,14 +411,17 @@ router.post('/create-advanced', async (req, res) => {
 
       // Step 2: Handle file upload based on method
       if (uploadMethod === 'local' && files && files.length > 0) {
+        // relativePaths array matches files array order (sent from frontend)
         const relativePaths = req.body.relativePaths
           ? (Array.isArray(req.body.relativePaths) ? req.body.relativePaths : [req.body.relativePaths])
           : [];
 
         files.forEach((f, i) => {
+          // Use the relative path if available (preserves folder structure), else just filename
           const relPath = relativePaths[i] || f.originalname;
           const destPath = `${documentRoot}/${relPath}`;
           const destDir = path.dirname(destPath);
+          // Ensure the subdirectory exists before moving the file
           setupCmds.push(`sudo mkdir -p ${destDir}`);
           setupCmds.push(`sudo mv ${f.path} ${destPath}`);
           setupCmds.push(`sudo chown www-data:www-data ${destPath}`);
@@ -455,7 +464,7 @@ router.post('/create-advanced', async (req, res) => {
       if (phpVersion && phpVersion !== 'none') {
         apacheConfig += `
     <FilesMatch \\.php$>
-        SetHandler "proxy:unix:/run/php/php${phpVersion}-fpm.sock|fcgi://localhost"
+        SetHandler "proxy:unix:${PHP_FPM_SOCKET_PATH}/php${phpVersion}-fpm.sock|fcgi://localhost"
     </FilesMatch>
 `;
       }
@@ -520,7 +529,7 @@ router.post('/create-advanced', async (req, res) => {
       });
 
       // Step 5: Enable site and test configuration
-      const enableCmd = `sudo a2ensite ${fullDomain}.conf && sudo apache2ctl configtest`;
+      const enableCmd = `sudo a2ensite ${fullDomain}.conf && sudo ${APACHE_SERVICE}ctl configtest`;
       
       await new Promise((resolve, reject) => {
         exec(enableCmd, (err, stdout, stderr) => {
@@ -535,7 +544,7 @@ router.post('/create-advanced', async (req, res) => {
 
       // Step 6: Reload Apache
       await new Promise((resolve, reject) => {
-        exec('sudo systemctl reload apache2', (err, stdout, stderr) => {
+        exec('sudo systemctl reload ${APACHE_SERVICE}', (err, stdout, stderr) => {
           if (err) {
             reject(new Error(stderr || 'Failed to reload Apache'));
           } else {
@@ -580,7 +589,7 @@ router.post('/create-advanced', async (req, res) => {
 
           // Create backup of SSL config too
           if (sslStatus === 'enabled') {
-            const sslConfFile = `/etc/apache2/sites-available/${fullDomain}-le-ssl.conf`;
+            const sslConfFile = `${APACHE_SITES_AVAILABLE}/${fullDomain}-le-ssl.conf`;
             if (fs.existsSync(sslConfFile)) {
               exec(`sudo cp ${sslConfFile} ${sslConfFile}.bak.initial`, (err) => {
                 if (err) {
@@ -607,13 +616,13 @@ router.post('/create-advanced', async (req, res) => {
       // Update sites list via socket
       setTimeout(() => {
         try {
-          const availableDir = '/etc/apache2/sites-available';
+          const availableDir = '${APACHE_SITES_AVAILABLE}';
           const availableSites = fs
             .readdirSync(availableDir)
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           const enabledSites = fs
-            .readdirSync('/etc/apache2/sites-enabled')
+            .readdirSync('${APACHE_SITES_ENABLED}')
             .filter((f) => f.endsWith('.conf'))
             .map((f) => f.replace('.conf', ''));
           
@@ -662,7 +671,7 @@ module.exports = router;
 // Migration endpoint: scan vhost configs and fix DocumentRoot/DirectoryIndex when index points to a subfolder (e.g., dist/index.html)
 router.post('/migrate-dist', (req, res) => {
   try {
-    const dirs = ['/etc/apache2/sites-available', '/etc/apache2/sites-enabled'];
+    const dirs = ['${APACHE_SITES_AVAILABLE}', '${APACHE_SITES_ENABLED}'];
     const patched = [];
     dirs.forEach((dir) => {
       if (!fs.existsSync(dir)) return;
@@ -701,11 +710,11 @@ router.post('/migrate-dist', (req, res) => {
     });
 
     // Test and reload Apache
-    exec('sudo apache2ctl configtest', (err, stdout, stderr) => {
+    exec('sudo ${APACHE_SERVICE}ctl configtest', (err, stdout, stderr) => {
       if (err) {
         return res.status(500).json({ success: false, error: `Config test failed: ${stderr || stdout}`, patched });
       }
-      exec('sudo systemctl reload apache2', (rerr, rout, rerrout) => {
+      exec('sudo systemctl reload ${APACHE_SERVICE}', (rerr, rout, rerrout) => {
         if (rerr) {
           return res.status(500).json({ success: false, error: `Reload failed: ${rerrout || rout}`, patched });
         }

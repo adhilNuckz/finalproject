@@ -26,17 +26,19 @@ const { isAllowedPath } = require('./utils/security');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*'
+}));
 app.use(bodyParser.json());
 
 // Multer setup for file uploads
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: process.env.UPLOAD_DIR || 'uploads/' });
 
 // Create HTTP server and Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, { 
   cors: { 
-    origin: '*' 
+    origin: process.env.CORS_ORIGIN || '*'
   } 
 });
 
@@ -141,11 +143,11 @@ app.use('/server', serverRoutes);
 app.use('/sites', sitesRoutes);
 app.use('/site', sitesRoutes);
 
-// Database management routes
-app.use('/databases', databasesRoutes);
-
 // Project management routes
 app.use('/projects', projectsRoutes);
+
+// Database management routes
+app.use('/databases', databasesRoutes);
 
 // ==================== Legacy Endpoints ====================
 
@@ -284,9 +286,10 @@ app.use((err, req, res, next) => {
 // ==================== Start Server ====================
 
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-server.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Backend server running on http://${HOST}:${PORT}`);
   console.log('Socket.IO enabled for real-time updates');
   console.log('Route modules loaded successfully');
 });

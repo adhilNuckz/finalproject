@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DOMAINS_FILE = path.join(__dirname, '../domains.json');
+const DOMAINS_FILE = path.join(__dirname, '..', process.env.DOMAINS_FILE || 'domains.json');
 
 // Helper to read domains
 function readDomains() {

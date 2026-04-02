@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const { exec } = require('child_process');
 const { runExec } = require('../utils/exec');
 
-const DATABASES_FILE = path.join(__dirname, '..', 'databases.json');
+const DATABASES_FILE = path.join(__dirname, '..', process.env.DATABASES_FILE || 'databases.json');
 
 // ==================== Helpers ====================
 

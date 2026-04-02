@@ -1,2 +1,4 @@
-export const API_BASE_URL = 'http://localhost:5000';
-export const SOCKET_URL = 'http://localhost:5000';
+// Load from environment variables (Vite exposes env vars with VITE_ prefix)
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+export const TERMINAL_URL = import.meta.env.VITE_TERMINAL_URL || 'http://localhost:3000';

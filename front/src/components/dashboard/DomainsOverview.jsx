@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, CheckCircle, XCircle, AlertCircle, Plus, Trash2, X } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 export default function DomainsOverview() {
   const [domains, setDomains] = useState([]);
@@ -9,7 +10,7 @@ export default function DomainsOverview() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = API_BASE_URL;
 
   useEffect(() => {
     fetchDomains();
