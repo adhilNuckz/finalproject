@@ -544,7 +544,7 @@ router.post('/create-advanced', async (req, res) => {
 
       // Step 6: Reload Apache
       await new Promise((resolve, reject) => {
-        exec('sudo systemctl reload ${APACHE_SERVICE}', (err, stdout, stderr) => {
+        exec(`sudo systemctl reload ${APACHE_SERVICE}`, (err, stdout, stderr) => {
           if (err) {
             reject(new Error(stderr || 'Failed to reload Apache'));
           } else {
@@ -710,11 +710,11 @@ router.post('/migrate-dist', (req, res) => {
     });
 
     // Test and reload Apache
-    exec('sudo ${APACHE_SERVICE}ctl configtest', (err, stdout, stderr) => {
+    exec(`sudo ${APACHE_SERVICE}ctl configtest`, (err, stdout, stderr) => {
       if (err) {
         return res.status(500).json({ success: false, error: `Config test failed: ${stderr || stdout}`, patched });
       }
-      exec('sudo systemctl reload ${APACHE_SERVICE}', (rerr, rout, rerrout) => {
+      exec(`sudo systemctl reload ${APACHE_SERVICE}`, (rerr, rout, rerrout) => {
         if (rerr) {
           return res.status(500).json({ success: false, error: `Reload failed: ${rerrout || rout}`, patched });
         }
