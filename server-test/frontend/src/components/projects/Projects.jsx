@@ -18,6 +18,33 @@ import { API_BASE_URL, TERMINAL_URL as TERMINAL_URL_CONFIG } from '../../config'
 const API_URL = API_BASE_URL;
 const TERMINAL_URL = TERMINAL_URL_CONFIG;
 
+function isLocalhostHostname(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+async function resolveTerminalUrl() {
+  try {
+    const url = new URL(TERMINAL_URL);
+    if (!isLocalhostHostname(url.hostname)) return url.toString();
+
+    const uiHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    if (uiHostname && !isLocalhostHostname(uiHostname)) {
+      url.hostname = uiHostname;
+      return url.toString();
+    }
+
+    const res = await fetch(`${API_URL}/server/ip`);
+    const data = await res.json();
+    if (data?.success && data?.ip) {
+      url.hostname = data.ip;
+      return url.toString();
+    }
+  } catch {
+    // ignore and fall back
+  }
+  return TERMINAL_URL;
+}
+
 export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -832,6 +859,8 @@ function TerminalPanelComponent({ project }) {
   useEffect(() => {
     if (!termRef.current) return;
 
+    let cancelled = false;
+
     const term = new XTerm({
       fontFamily: 'monospace',
       fontSize: 13,
@@ -854,40 +883,46 @@ function TerminalPanelComponent({ project }) {
 
     setTimeout(() => fitAddon.fit(), 50);
 
-    const socket = io(TERMINAL_URL, { transports: ['websocket'] });
-    socketRef.current = socket;
+    (async () => {
+      const socketUrl = await resolveTerminalUrl();
+      if (cancelled) return;
 
-    socket.on('connect', () => {
-      term.writeln(`\x1b[36m~ Terminal opened in: ${project.path}\x1b[0m\r\n`);
-      socket.emit('create-session', { sessionId: sessionId.current, cwd: project.path });
-    });
+      const socket = io(socketUrl, { transports: ['polling', 'websocket'] });
+      socketRef.current = socket;
 
-    socket.on('session-created', () => {});
+      socket.on('connect', () => {
+        term.writeln(`\x1b[36m~ Terminal opened in: ${project.path}\x1b[0m\r\n`);
+        socket.emit('create-session', { sessionId: sessionId.current, cwd: project.path });
+      });
 
-    socket.on('output', ({ sessionId: sid, data }) => {
-      if (sid === sessionId.current) term.write(data);
-    });
+      socket.on('session-created', () => {});
 
-    socket.on('session-closed', ({ sessionId: sid }) => {
-      if (sid === sessionId.current) term.writeln('\r\n\x1b[31m~ Session ended\x1b[0m');
-    });
+      socket.on('output', ({ sessionId: sid, data }) => {
+        if (sid === sessionId.current) term.write(data);
+      });
+
+      socket.on('session-closed', ({ sessionId: sid }) => {
+        if (sid === sessionId.current) term.writeln('\r\n\x1b[31m~ Session ended\x1b[0m');
+      });
+    })();
 
     term.onData((data) => {
-      socket.emit('input', { sessionId: sessionId.current, data });
+      socketRef.current?.emit('input', { sessionId: sessionId.current, data });
     });
 
     const resizeObserver = new ResizeObserver(() => {
       try {
         fitAddon.fit();
-        socket.emit('resize', { sessionId: sessionId.current, cols: term.cols, rows: term.rows });
+        socketRef.current?.emit('resize', { sessionId: sessionId.current, cols: term.cols, rows: term.rows });
       } catch {}
     });
     resizeObserver.observe(termRef.current);
 
     return () => {
+      cancelled = true;
       resizeObserver.disconnect();
-      socket.emit('close-session', { sessionId: sessionId.current });
-      socket.disconnect();
+      socketRef.current?.emit('close-session', { sessionId: sessionId.current });
+      socketRef.current?.disconnect();
       term.dispose();
     };
   }, []);

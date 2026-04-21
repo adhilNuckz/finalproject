@@ -21,6 +21,25 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       'http://127.0.0.1:3000'
     ];
 
+function isOriginAllowed(origin, hostHeader) {
+  if (!origin) return true;
+  if (origin === 'null') return false;
+  if (allowedOrigins.includes(origin)) return true;
+
+  // Allow same-host origins automatically (useful when accessing via LAN/public IP).
+  if (hostHeader) {
+    try {
+      const originUrl = new URL(origin);
+      const requestHost = String(hostHeader).split(':')[0];
+      if (originUrl.hostname === requestHost) return true;
+    } catch {
+      // ignore
+    }
+  }
+
+  return false;
+}
+
 
 
 function stripAnsiCodes(str) {
@@ -34,15 +53,16 @@ function stripAnsiCodes(str) {
 
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      // allow requests with no origin (curl, server-side)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
-      return callback(new Error('Origin not allowed by CORS'));
-    },
+    origin: true,
     methods: ['GET', 'POST'],
-    credentials: true
-  }
+    credentials: true,
+  },
+  allowRequest: (req, callback) => {
+    const origin = req.headers.origin;
+    const hostHeader = req.headers.host;
+    if (isOriginAllowed(origin, hostHeader)) return callback(null, true);
+    return callback('Origin not allowed', false);
+  },
 });
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -63,9 +83,7 @@ io.on("connection", (socket) => {
     
     const sessionCwd = cwd || process.env.DEFAULT_CWD || process.env.HOME;
     const shell = process.env.DEFAULT_SHELL || "bash";
-    
-    const ptyProcess = spawn(shell, [], {
-    
+
     const ptyProcess = spawn(shell, [], {
       name: "xterm-color",
       cols: 80,
@@ -115,9 +133,7 @@ io.on("connection", (socket) => {
   socket.on('resize', ({ sessionId, cols, rows }) => {
     const ptyProcess = sessions.get(sessionId);
     if (!ptyProcess) return;
-    const ptyProcess = sessions.get(sessionId);
-    if (!ptyProcess) return;
-    
+
     try {
       ptyProcess.resize(Math.max(1, cols), Math.max(1, rows));
     } catch (e) {

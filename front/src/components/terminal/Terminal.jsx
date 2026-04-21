@@ -5,9 +5,34 @@ import { WebLinksAddon } from "xterm-addon-web-links";
 import { Plus, X, Download } from "lucide-react";
 import io from "socket.io-client";
 import "xterm/css/xterm.css";
-import { TERMINAL_URL } from '../../config';
+import { API_BASE_URL, TERMINAL_URL } from '../../config';
 
-const SOCKET_SERVER_URL = TERMINAL_URL;
+function isLocalhostHostname(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+async function resolveTerminalUrl() {
+  try {
+    const url = new URL(TERMINAL_URL);
+    if (!isLocalhostHostname(url.hostname)) return url.toString();
+
+    const uiHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    if (uiHostname && !isLocalhostHostname(uiHostname)) {
+      url.hostname = uiHostname;
+      return url.toString();
+    }
+
+    const res = await fetch(`${API_BASE_URL}/server/ip`);
+    const data = await res.json();
+    if (data?.success && data?.ip) {
+      url.hostname = data.ip;
+      return url.toString();
+    }
+  } catch {
+    // ignore and fall back
+  }
+  return TERMINAL_URL;
+}
 
 export default function Terminal() {
   const [sessions, setSessions] = useState([]);
@@ -16,78 +41,87 @@ export default function Terminal() {
   const terminalsRef = useRef(new Map()); // sessionId -> { term, fitAddon, containerRef }
 
   useEffect(() => {
-    // Initialize Socket.IO
-    const socket = io(SOCKET_SERVER_URL, { transports: ["websocket"] });
-    socketRef.current = socket;
+    let cancelled = false;
+    let socket;
 
     let initialSessionCreated = false;
 
-    socket.on("connect", () => {
-      console.log("Connected to terminal server");
-      // Create first session on connect
-      if (!initialSessionCreated) {
-        initialSessionCreated = true;
-        const sessionId = `session-${Date.now()}`;
-        const newSession = {
-          id: sessionId,
-          name: `Terminal 1`,
-          created: new Date(),
-        };
-        setSessions([newSession]);
-        setActiveSessionId(sessionId);
-        socket.emit("create-session", { sessionId });
-      }
-    });
+    (async () => {
+      const socketUrl = await resolveTerminalUrl();
+      if (cancelled) return;
 
-    socket.on("session-created", ({ sessionId }) => {
-      console.log(`Session ${sessionId} created`);
-    });
+      // Initialize Socket.IO
+      socket = io(socketUrl, { transports: ["polling", "websocket"] });
+      socketRef.current = socket;
 
-    socket.on("output", ({ sessionId, data }) => {
-      const termData = terminalsRef.current.get(sessionId);
-      if (termData && termData.term) {
-        termData.term.write(data);
-      }
-    });
-
-    socket.on("session-closed", ({ sessionId }) => {
-      // Close terminal
-      const termData = terminalsRef.current.get(sessionId);
-      if (termData && termData.term) {
-        termData.term.dispose();
-      }
-      terminalsRef.current.delete(sessionId);
-
-      // Update sessions list
-      setSessions((prev) => {
-        const filtered = prev.filter((s) => s.id !== sessionId);
-        
-        // If closing active session, switch to another
-        setActiveSessionId((currentActive) => {
-          if (sessionId === currentActive && filtered.length > 0) {
-            return filtered[0].id;
-          } else if (filtered.length === 0) {
-            return null;
-          }
-          return currentActive;
-        });
-        
-        return filtered;
+      socket.on("connect", () => {
+        console.log("Connected to terminal server");
+        // Create first session on connect
+        if (!initialSessionCreated) {
+          initialSessionCreated = true;
+          const sessionId = `session-${Date.now()}`;
+          const newSession = {
+            id: sessionId,
+            name: `Terminal 1`,
+            created: new Date(),
+          };
+          setSessions([newSession]);
+          setActiveSessionId(sessionId);
+          socket.emit("create-session", { sessionId });
+        }
       });
-    });
 
-    socket.on("disconnect", () => {
-      console.log("Disconnected from terminal server");
-    });
+      socket.on("session-created", ({ sessionId }) => {
+        console.log(`Session ${sessionId} created`);
+      });
+
+      socket.on("output", ({ sessionId, data }) => {
+        const termData = terminalsRef.current.get(sessionId);
+        if (termData && termData.term) {
+          termData.term.write(data);
+        }
+      });
+
+      socket.on("session-closed", ({ sessionId }) => {
+        // Close terminal
+        const termData = terminalsRef.current.get(sessionId);
+        if (termData && termData.term) {
+          termData.term.dispose();
+        }
+        terminalsRef.current.delete(sessionId);
+
+        // Update sessions list
+        setSessions((prev) => {
+          const filtered = prev.filter((s) => s.id !== sessionId);
+
+          // If closing active session, switch to another
+          setActiveSessionId((currentActive) => {
+            if (sessionId === currentActive && filtered.length > 0) {
+              return filtered[0].id;
+            } else if (filtered.length === 0) {
+              return null;
+            }
+            return currentActive;
+          });
+
+          return filtered;
+        });
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected from terminal server");
+      });
+    })();
 
     return () => {
+      cancelled = true;
       // Cleanup all terminals
       terminalsRef.current.forEach((termData) => {
         if (termData.term) {
           termData.term.dispose();
         }
       });
-      socket.disconnect();
+      if (socket) socket.disconnect();
     };
   }, []);
 
