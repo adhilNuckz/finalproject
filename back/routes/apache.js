@@ -1,8 +1,129 @@
 const express = require('express');
+const fs = require('fs');
+const net = require('net');
+const path = require('path');
 const router = express.Router();
 const { exec } = require('child_process');
 
 const APACHE_SERVICE = process.env.APACHE_SERVICE_NAME || 'apache2';
+const APACHE_LOG_DIR = process.env.APACHE_ACCESS_LOG_DIR || '/var/log/apache2';
+const APACHE_BANLIST_FILE = path.join(__dirname, '..', process.env.APACHE_BANLIST_FILE || 'apache-banlist.json');
+const APACHE_BAN_CONF_PATH = process.env.APACHE_BAN_CONF_PATH || '/etc/apache2/conf-available/finalproject-ip-blocklist.conf';
+const APACHE_BAN_CONF_NAME = path.basename(APACHE_BAN_CONF_PATH, '.conf');
+
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, `'"'"'`)}'`;
+}
+
+function loadBanList() {
+  try {
+    if (!fs.existsSync(APACHE_BANLIST_FILE)) {
+      return [];
+    }
+
+    const data = JSON.parse(fs.readFileSync(APACHE_BANLIST_FILE, 'utf8'));
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data.ips)) {
+      return data.ips;
+    }
+
+    return [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveBanList(entries) {
+  fs.writeFileSync(APACHE_BANLIST_FILE, JSON.stringify(entries, null, 2), 'utf8');
+}
+
+function validateIp(ip) {
+  return typeof ip === 'string' && net.isIP(ip.trim()) !== 0;
+}
+
+function parseCombinedLogLine(line, sourceFile) {
+  const combinedMatch = line.match(/^([\d.:a-fA-F]+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d{3})\s+(\S+)(?:\s+"([^"]*)"\s+"([^"]*)")?/);
+
+  if (!combinedMatch) {
+    return {
+      raw: line,
+      sourceFile,
+      timestamp: null,
+      ip: null,
+      method: null,
+      path: null,
+      protocol: null,
+      status: null,
+      bytes: null,
+      referrer: null,
+      userAgent: null
+    };
+  }
+
+  const [, ip, timestamp, request, status, bytes, referrer = '-', userAgent = '-'] = combinedMatch;
+  const requestMatch = request.match(/^([A-Z]+)\s+(.*?)(?:\s+(HTTP\/\d\.\d))?$/i);
+
+  return {
+    raw: line,
+    sourceFile,
+    timestamp,
+    ip,
+    method: requestMatch ? requestMatch[1] : null,
+    path: requestMatch ? requestMatch[2] : request,
+    protocol: requestMatch ? requestMatch[3] || null : null,
+    status: Number(status),
+    bytes: bytes === '-' ? null : Number(bytes),
+    referrer,
+    userAgent
+  };
+}
+
+function buildBanConfig(entries) {
+  const ipRules = entries
+    .map((entry) => entry.ip)
+    .filter(Boolean)
+    .map((ip) => `      Require not ip ${ip}`)
+    .join('\n');
+
+  return `# Managed by Hosting Manager\n<IfModule mod_authz_core.c>\n  <Location "/">\n    <RequireAll>\n      Require all granted${ipRules ? `\n${ipRules}` : ''}\n    </RequireAll>\n  </Location>\n</IfModule>\n`;
+}
+
+async function execPromise(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(stderr || error.message));
+        return;
+      }
+
+      resolve({ stdout, stderr });
+    });
+  });
+}
+
+async function applyBanConfig(entries) {
+  const tempFile = `/tmp/${APACHE_BAN_CONF_NAME}.conf`;
+  fs.writeFileSync(tempFile, buildBanConfig(entries), 'utf8');
+
+  const sudoCheck = await execPromise('sudo -n true');
+  if (sudoCheck.stderr && sudoCheck.stderr.includes('password')) {
+    throw new Error('Passwordless sudo is required to apply Apache IP bans');
+  }
+
+  await execPromise(`sudo -n mv ${shellQuote(tempFile)} ${shellQuote(APACHE_BAN_CONF_PATH)} && sudo -n chown root:root ${shellQuote(APACHE_BAN_CONF_PATH)} && sudo -n chmod 644 ${shellQuote(APACHE_BAN_CONF_PATH)}`);
+  await execPromise(`sudo -n a2enconf ${shellQuote(APACHE_BAN_CONF_NAME)} >/dev/null 2>&1 || true`);
+
+  const testResult = await execPromise('sudo -n apache2ctl configtest');
+  const testOutput = `${testResult.stdout}${testResult.stderr}`;
+  if (!testOutput.includes('Syntax OK')) {
+    throw new Error(testOutput || 'Apache configuration test failed');
+  }
+
+  await execPromise(`sudo -n systemctl reload ${shellQuote(APACHE_SERVICE)}`);
+}
 
 // GET Apache status
 router.get('/status', (req, res) => {
@@ -71,7 +192,7 @@ router.get('/configs', (req, res) => {
 router.get('/logs', (req, res) => {
   const logFile = '/var/log/apache2/error.log';
   
-  exec(`sudo tail -n 50 ${logFile}`, (err, stdout, stderr) => {
+  exec(`tail -n 50 ${logFile}`, (err, stdout, stderr) => {
     if (err) {
       return res.status(500).json({ 
         success: false, 
@@ -83,6 +204,104 @@ router.get('/logs', (req, res) => {
     const logs = stdout.split('\n').filter(line => line.trim());
     res.json({ success: true, logs });
   });
+});
+
+// GET Apache access logs
+router.get('/access-logs', async (req, res) => {
+  try {
+    const limit = Math.max(10, Math.min(Number.parseInt(req.query.limit || '60', 10) || 60, 200));
+    const discoveredFiles = fs
+      .readdirSync(APACHE_LOG_DIR, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && (entry.name === 'access.log' || entry.name.endsWith('-access.log')))
+      .map((entry) => path.join(APACHE_LOG_DIR, entry.name));
+
+    const parsedEntries = [];
+
+    await Promise.all(discoveredFiles.map((filePath) => new Promise((resolve) => {
+      exec(`tail -n ${limit} ${shellQuote(filePath)}`, (err, stdout) => {
+        if (!err && stdout) {
+          stdout
+            .split('\n')
+            .filter((line) => line.trim())
+            .forEach((line) => {
+              parsedEntries.push(parseCombinedLogLine(line, path.basename(filePath)));
+            });
+        }
+
+        resolve();
+      });
+    })));
+
+    const sorted = parsedEntries.sort((a, b) => {
+      const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return bTime - aTime;
+    });
+
+    res.json({ success: true, logs: sorted.slice(0, limit) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message, logs: [] });
+  }
+});
+
+// GET banned IP entries
+router.get('/ip-bans', (req, res) => {
+  try {
+    const entries = loadBanList();
+    res.json({ success: true, bans: entries });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message, bans: [] });
+  }
+});
+
+// POST ban IP
+router.post('/ip-bans', async (req, res) => {
+  const { ip, reason = '' } = req.body;
+
+  if (!validateIp(ip)) {
+    return res.status(400).json({ success: false, error: 'A valid IP address is required' });
+  }
+
+  try {
+    const entries = loadBanList();
+    const normalizedIp = ip.trim();
+
+    if (!entries.some((entry) => entry.ip === normalizedIp)) {
+      entries.push({
+        ip: normalizedIp,
+        reason: String(reason || '').trim(),
+        bannedAt: new Date().toISOString()
+      });
+
+      saveBanList(entries);
+      await applyBanConfig(entries);
+    }
+
+    res.json({ success: true, bans: entries });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE unban IP
+router.delete('/ip-bans/:ip', async (req, res) => {
+  const { ip } = req.params;
+
+  if (!validateIp(ip)) {
+    return res.status(400).json({ success: false, error: 'A valid IP address is required' });
+  }
+
+  try {
+    const normalizedIp = ip.trim();
+    const entries = loadBanList().filter((entry) => entry.ip !== normalizedIp);
+
+    saveBanList(entries);
+    await applyBanConfig(entries);
+
+    res.json({ success: true, bans: entries });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // GET Apache config test

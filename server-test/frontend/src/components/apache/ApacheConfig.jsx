@@ -12,7 +12,11 @@ import {
   RefreshCw,
   Edit,
   Save,
-  X
+  X,
+  Ban,
+  ShieldAlert,
+  Trash2,
+  Clock3
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
 
@@ -20,6 +24,12 @@ export default function ApacheConfig() {
   const [apacheStatus, setApacheStatus] = useState('unknown');
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [accessLogs, setAccessLogs] = useState([]);
+  const [bans, setBans] = useState([]);
+  const [banIp, setBanIp] = useState('');
+  const [banReason, setBanReason] = useState('');
+  const [accessLoading, setAccessLoading] = useState(false);
+  const [banLoading, setBanLoading] = useState(false);
   const [configFiles, setConfigFiles] = useState([]);
   const [selectedConfig, setSelectedConfig] = useState(null);
   const [testResult, setTestResult] = useState(null);
@@ -32,8 +42,12 @@ export default function ApacheConfig() {
   useEffect(() => {
     fetchApacheStatus();
     fetchApacheLogs();
+    fetchAccessLogs();
+    fetchBanList();
     fetchConfigFiles();
   }, []);
+
+  const isBanned = (ip) => bans.some((entry) => entry.ip === ip);
 
   const fetchApacheStatus = async () => {
     try {
@@ -53,6 +67,45 @@ export default function ApacheConfig() {
       setLogs(data.logs || []);
     } catch (error) {
       console.error('Error fetching Apache logs:', error);
+    }
+  };
+
+  const fetchAccessLogs = async () => {
+    setAccessLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/apache/access-logs?limit=60`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      setAccessLogs(data.logs || []);
+    } catch (error) {
+      console.error('Error fetching Apache access logs:', error);
+      setAccessLogs([]);
+      if (error?.message?.includes('HTTP 404')) {
+        console.info('Apache access logs endpoint is not available yet on the running backend.');
+      }
+    } finally {
+      setAccessLoading(false);
+    }
+  };
+
+  const fetchBanList = async () => {
+    setBanLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/apache/ip-bans`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      setBans(data.bans || []);
+    } catch (error) {
+      console.error('Error fetching banned IPs:', error);
+      setBans([]);
+    } finally {
+      setBanLoading(false);
     }
   };
 
@@ -79,6 +132,7 @@ export default function ApacheConfig() {
       if (data.success) {
         await fetchApacheStatus();
         await fetchApacheLogs();
+        await fetchAccessLogs();
       }
     } catch (error) {
       console.error(`Error ${action}ing Apache:`, error);
@@ -99,6 +153,62 @@ export default function ApacheConfig() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBanIp = async (ip, reason = '') => {
+    if (!ip) return;
+    setBanLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/apache/ip-bans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip, reason })
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setBans(data.bans || []);
+        setBanIp('');
+        setBanReason('');
+      } else {
+        alert(data.error || 'Failed to ban IP');
+      }
+    } catch (error) {
+      console.error('Error banning IP:', error);
+      alert('Failed to ban IP');
+    } finally {
+      setBanLoading(false);
+    }
+  };
+
+  const handleUnbanIp = async (ip) => {
+    if (!ip) return;
+    setBanLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/apache/ip-bans/${encodeURIComponent(ip)}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setBans(data.bans || []);
+      } else {
+        alert(data.error || 'Failed to unban IP');
+      }
+    } catch (error) {
+      console.error('Error unbanning IP:', error);
+      alert('Failed to unban IP');
+    } finally {
+      setBanLoading(false);
+    }
+  };
+
+  const handleRefreshAll = async () => {
+    fetchApacheStatus();
+    fetchApacheLogs();
+    fetchAccessLogs();
+    fetchBanList();
+    fetchConfigFiles();
   };
 
   const handleConfigClick = async (config) => {
@@ -214,11 +324,7 @@ export default function ApacheConfig() {
           </div>
         </div>
         <button
-          onClick={() => {
-            fetchApacheStatus();
-            fetchApacheLogs();
-            fetchConfigFiles();
-          }}
+          onClick={handleRefreshAll}
           className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
           title="Refresh"
         >
@@ -332,6 +438,180 @@ export default function ApacheConfig() {
         )}
       </div>
 
+      {/* Access Logs + IP Bans */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-[#141414] rounded-lg border border-[#1f1f1f] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-100 flex items-center">
+              <Clock3 className="w-5 h-5 mr-2 text-lava-500" />
+              Access Logs
+            </h3>
+            <button
+              onClick={fetchAccessLogs}
+              className="text-xs px-3 py-1.5 rounded-md bg-[#1a1a1a] hover:bg-[#232323] text-gray-300 transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-1">
+            {accessLoading ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-20 rounded-lg bg-[#1a1a1a]" />
+                <div className="h-20 rounded-lg bg-[#1a1a1a]" />
+                <div className="h-20 rounded-lg bg-[#1a1a1a]" />
+              </div>
+            ) : accessLogs.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">No access logs available</p>
+            ) : (
+              accessLogs.map((entry, index) => {
+                const banned = entry.ip ? isBanned(entry.ip) : false;
+                const statusClass = entry.status >= 500
+                  ? 'text-red-300 bg-red-900/30 border-red-800/60'
+                  : entry.status >= 400
+                    ? 'text-amber-300 bg-amber-900/30 border-amber-800/60'
+                    : entry.status >= 300
+                      ? 'text-blue-300 bg-blue-900/30 border-blue-800/60'
+                      : 'text-emerald-300 bg-emerald-900/30 border-emerald-800/60';
+
+                return (
+                  <div key={`${entry.sourceFile}-${index}`} className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <span className="rounded-full bg-[#1a1a1a] px-2 py-1 text-gray-300">
+                          {entry.timestamp || 'Unknown time'}
+                        </span>
+                        <span className="rounded-full bg-[#1a1a1a] px-2 py-1 text-gray-300">
+                          {entry.sourceFile}
+                        </span>
+                      </div>
+                      {entry.status != null && (
+                        <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass}`}>
+                          {entry.status}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-300">
+                      <span className="font-mono rounded-md bg-[#1a1a1a] px-2 py-1 text-lava-300">
+                        {entry.ip || 'Unknown IP'}
+                      </span>
+                      {entry.method && (
+                        <span className="rounded-md bg-[#1a1a1a] px-2 py-1 text-gray-200">
+                          {entry.method}
+                        </span>
+                      )}
+                      {entry.path && <span className="text-gray-100">{entry.path}</span>}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+                      <div className="space-y-1">
+                        {entry.protocol && <p>Protocol: {entry.protocol}</p>}
+                        {entry.referrer && entry.referrer !== '-' && <p>Referrer: {entry.referrer}</p>}
+                        {entry.userAgent && entry.userAgent !== '-' && <p className="max-w-xl truncate">Agent: {entry.userAgent}</p>}
+                      </div>
+                      {entry.ip && (
+                        <button
+                          onClick={() => (banned ? handleUnbanIp(entry.ip) : handleBanIp(entry.ip, `Blocked from access log: ${entry.sourceFile}`))}
+                          className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                            banned
+                              ? 'bg-emerald-900/30 text-emerald-200 hover:bg-emerald-900/50'
+                              : 'bg-red-900/30 text-red-200 hover:bg-red-900/50'
+                          }`}
+                        >
+                          {banned ? <ShieldAlert className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                          {banned ? 'Unban IP' : 'Ban IP'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="bg-[#141414] rounded-lg border border-[#1f1f1f] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-100 flex items-center">
+              <Ban className="w-5 h-5 mr-2 text-red-500" />
+              Banned IPs
+            </h3>
+            <button
+              onClick={fetchBanList}
+              className="text-xs px-3 py-1.5 rounded-md bg-[#1a1a1a] hover:bg-[#232323] text-gray-300 transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 rounded-xl border border-[#242424] bg-[#0f0f0f] p-4">
+              <div>
+                <label className="block text-xs uppercase tracking-[0.18em] text-gray-500 mb-2">IP address</label>
+                <input
+                  type="text"
+                  value={banIp}
+                  onChange={(e) => setBanIp(e.target.value)}
+                  placeholder="203.0.113.10"
+                  className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-3 py-2 text-sm text-gray-100 outline-none transition-colors focus:border-lava-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-[0.18em] text-gray-500 mb-2">Reason</label>
+                <input
+                  type="text"
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  placeholder="Optional reason"
+                  className="w-full rounded-lg border border-[#2a2a2a] bg-[#111111] px-3 py-2 text-sm text-gray-100 outline-none transition-colors focus:border-lava-500"
+                />
+              </div>
+              <button
+                onClick={() => handleBanIp(banIp.trim(), banReason.trim())}
+                disabled={banLoading || !banIp.trim()}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Ban className="w-4 h-4" />
+                Ban IP
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-[20rem] overflow-y-auto pr-1">
+              {banLoading ? (
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-16 rounded-lg bg-[#1a1a1a]" />
+                  <div className="h-16 rounded-lg bg-[#1a1a1a]" />
+                </div>
+              ) : bans.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-6">No IPs are currently banned</p>
+              ) : (
+                bans.map((entry) => (
+                  <div key={entry.ip} className="rounded-xl border border-[#242424] bg-[#0f0f0f] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-mono text-sm text-red-300">{entry.ip}</p>
+                        <p className="mt-1 text-xs text-gray-500">{entry.reason || 'No reason provided'}</p>
+                        <p className="mt-1 text-xs text-gray-600">
+                          Banned: {entry.bannedAt ? new Date(entry.bannedAt).toLocaleString() : 'Unknown'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleUnbanIp(entry.ip)}
+                        className="inline-flex items-center gap-2 rounded-md bg-emerald-900/30 px-3 py-2 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-900/50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Unban
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Available Configs */}
         <div className="bg-[#141414] rounded-lg border border-[#1f1f1f] p-6">
@@ -373,11 +653,11 @@ export default function ApacheConfig() {
           </div>
         </div>
 
-        {/* Apache Logs */}
+        {/* Apache Error Logs */}
         <div className="bg-[#141414] rounded-lg border border-[#1f1f1f] p-6">
           <h3 className="text-lg font-semibold text-gray-100 mb-4 flex items-center">
             <FileText className="w-5 h-5 mr-2 text-orange-600" />
-            Recent Logs
+            Error Logs
           </h3>
           <div className="bg-[#0e0e0e] rounded-lg p-4 max-h-96 overflow-y-auto font-mono text-xs">
             {logs.length === 0 ? (

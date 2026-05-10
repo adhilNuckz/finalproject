@@ -80,14 +80,43 @@ router.get('/', async (req, res) => {
       // Git status
       if (fs.existsSync(path.join(project.path, '.git'))) {
         try {
+          await gitExec('git fetch --all --prune --quiet', project.path).catch(() => '');
           const branch = await gitExec('git rev-parse --abbrev-ref HEAD', project.path);
           const status = await gitExec('git status --porcelain', project.path);
           const logRaw = await gitExec('git log --oneline -5 2>/dev/null || echo ""', project.path);
+          const lastCommitRaw = await gitExec('git log -1 --format=%H|%ci|%s 2>/dev/null || echo ""', project.path).catch(() => '');
+
+          let ahead = null;
+          let behind = null;
+          try {
+            const remoteCounts = await gitExec(`git rev-list --left-right --count origin/${branch}...HEAD 2>/dev/null || echo ""`, project.path);
+            if (remoteCounts) {
+              const parts = remoteCounts.trim().split(/\s+/);
+              if (parts.length >= 2) {
+                behind = Number(parts[0]) || 0;
+                ahead = Number(parts[1]) || 0;
+              }
+            }
+          } catch {
+            ahead = null;
+            behind = null;
+          }
+
+          let lastCommit = null;
+          if (lastCommitRaw) {
+            const [hash, committedAt, subject] = lastCommitRaw.split('|');
+            lastCommit = { hash, committedAt, subject };
+          }
+
           result.git = {
             branch,
             hasChanges: status.length > 0,
             changedFiles: status ? status.split('\n').filter(Boolean).length : 0,
-            recentCommits: logRaw ? logRaw.split('\n').filter(Boolean) : []
+            recentCommits: logRaw ? logRaw.split('\n').filter(Boolean) : [],
+            lastCommit,
+            ahead,
+            behind,
+            repoState: ahead > 0 ? 'remote-updated' : behind > 0 ? 'local-ahead' : 'synced'
           };
         } catch {
           result.git = { error: 'Failed to read git status' };
@@ -423,6 +452,66 @@ router.post('/:id/git/push', async (req, res) => {
     res.json({ success: true, output });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// POST redeploy frontend/backend/both for a project
+router.post('/:id/deploy', async (req, res) => {
+  const { scope = 'both' } = req.body || {};
+  const projects = readProjects();
+  const project = projects.find(p => p.id === req.params.id);
+
+  if (!project) {
+    return res.status(404).json({ success: false, error: 'Project not found' });
+  }
+
+  const tasks = [];
+  const basePath = project.path;
+  const maybeDirs = [
+    { name: 'frontend', dir: path.join(basePath, 'front') },
+    { name: 'frontend', dir: path.join(basePath, 'frontend') },
+    { name: 'backend', dir: path.join(basePath, 'back') },
+    { name: 'backend', dir: path.join(basePath, 'backend') }
+  ];
+
+  const queueTask = (label, cmd, cwd) => tasks.push({ label, cmd, cwd });
+
+  try {
+    await gitExec('git fetch --all --prune', basePath).catch(() => '');
+    await gitExec(`git pull origin ${project.branch || 'main'}`, basePath).catch(() => '');
+
+    const selectedScopes = scope === 'both' ? ['frontend', 'backend'] : [scope];
+    for (const selected of selectedScopes) {
+      const candidate = maybeDirs.find(item => item.name === selected && fs.existsSync(item.dir));
+      if (!candidate) continue;
+
+      queueTask(`${selected}:install`, 'npm install', candidate.dir);
+      queueTask(`${selected}:build`, 'npm run build', candidate.dir);
+    }
+
+    const output = [];
+    for (const task of tasks) {
+      try {
+        output.push(`== ${task.label} ==`);
+        const result = await gitExec(task.cmd, task.cwd);
+        if (result) output.push(result);
+      } catch (e) {
+        output.push(`Error in ${task.label}: ${e.message}`);
+      }
+    }
+
+    if (project.pm2Name) {
+      try {
+        output.push('== pm2 restart ==');
+        output.push(await gitExec(`pm2 restart ${project.pm2Name}`, basePath));
+      } catch (e) {
+        output.push(`PM2 restart skipped: ${e.message}`);
+      }
+    }
+
+    res.json({ success: true, output: output.join('\n') || 'Deploy completed' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message || 'Deploy failed' });
   }
 });
 

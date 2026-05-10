@@ -207,6 +207,16 @@ Everything is ready for deployment! The `server-test` folder contains:
 - ✅ Complete documentation
 - ✅ Apache configuration templates
 
+## Recent Session Updates
+
+The current session added and adjusted the following items in the main app flow:
+- Dashboard hero now surfaces live graphs so system metrics are visible immediately.
+- Dashboard notifications now summarize recent project activity and system alerts.
+- Project/redeploy UI now exposes recent-push tracking and redeploy controls.
+- Apache admin now shows access logs with timestamp, IP, method, path, status, referrer, and user-agent details.
+- Apache admin now supports IP ban and unban actions with a JSON-backed ban list.
+- Apache config and log fetches now fail gracefully instead of throwing on non-JSON responses.
+
 **Your original development code remains completely unchanged!**
 
 Just upload the `server-test` folder to your server and follow the deployment guide. 🚀
