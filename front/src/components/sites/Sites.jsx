@@ -134,7 +134,6 @@ export default function Sites() {
         <AddSiteModal 
           onClose={() => setShowAddModal(false)} 
           onCreated={async () => { 
-            setShowAddModal(false); 
             await fetchSites(); 
           }} 
           isServerInterface={false}

@@ -75,7 +75,6 @@ export default function Dashboard() {
         <AddSiteModal
           onClose={() => setShowAddSiteModal(false)}
           onCreated={() => {
-            setShowAddSiteModal(false);
             // Optionally refresh dashboard data here
           }}
           isServerInterface={false}

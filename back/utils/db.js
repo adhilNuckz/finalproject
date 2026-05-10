@@ -1,7 +1,7 @@
 const knex = require('knex');
 const mongoose = require('mongoose');
 
-const DB_CLIENT = process.env.DB_CLIENT || process.env.DB_TYPE || 'mysql';
+const DB_CLIENT = process.env.DB_CLIENT || process.env.DB_TYPE || 'mysql2';
 
 let sql = null;
 let mongo = null;
@@ -15,7 +15,8 @@ async function init() {
   }
 
   // SQL (mysql, pg, sqlite3)
-  const client = process.env.DB_CLIENT || 'mysql';
+  const rawClient = process.env.DB_CLIENT || 'mysql2';
+  const client = rawClient === 'mysql' ? 'mysql2' : rawClient;
   const connection = getSqlConnection(client);
 
   sql = knex({
@@ -58,9 +59,11 @@ function getSqlConnection(client) {
     };
   }
 
+  const defaultPort = (client === 'mysql' || client === 'mysql2') ? 3306 : 5432;
+
   return {
     host: process.env.DB_HOST || '127.0.0.1',
-    port: process.env.DB_PORT || (client === 'mysql' ? 3306 : 5432),
+    port: process.env.DB_PORT || defaultPort,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'app_db'

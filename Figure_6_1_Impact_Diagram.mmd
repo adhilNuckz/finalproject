@@ -1,0 +1,43 @@
+graph TD
+    subgraph Problem ["1. Research Problem (Fragmentation)"]
+        P1[Manual CLI Complexity]
+        P2[Heavy Cloud Overhead]
+        P3[Disconnected Toolsets]
+        P1 --- P2
+        P2 --- P3
+    end
+
+    subgraph Solution ["2. Proposed Solution (Lightweight Platform)"]
+        S1[Unified Web Interface]
+        S2[Linux-Native Integration]
+        S3[Automated Orchestration]
+        S1 --- S2
+        S2 --- S3
+    end
+
+    subgraph Implementation ["3. Implemented Modules"]
+        M1["Apache & SSL Orchestration"]
+        M2["PM2 & Runtime Monitoring"]
+        M3["File Manager & Terminal"]
+        M1 --- M2
+        M2 --- M3
+    end
+
+    subgraph Outcome ["4. Outcomes & Final Impact"]
+        O1[Reduced Setup Latency]
+        O2[Cost-Efficiency for VPS]
+        O3[Full Operational Transparency]
+        O1 --- O2
+        O2 --- O3
+    end
+
+    %% Flow connections
+    Problem ==> Solution
+    Solution ==> Implementation
+    Implementation ==> Outcome
+
+    %% Styling
+    style Problem fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style Solution fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Implementation fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Outcome fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px

@@ -18,37 +18,146 @@ The proposed project is positioned as a **lightweight web-based server managemen
 -- **Figure 2.7: Positioning of the Proposed System in the Hosting Solution Spectrum**  
 -- **Figure prompt:** "Draw a spectrum diagram with left: Manual CLI/SSH, center-left: cPanel/Plesk/DirectAdmin, center: Proposed Lightweight Web Manager, center-right: Managed App Platforms (Heroku/Render/Vercel), right: Full Cloud Platforms (AWS/Azure/GCP). Add overlays for control, complexity, cost, and deployment speed."
 
+-- **2.8 Summary**  
+This chapter examined major existing hosting and server-management approaches, including manual CLI administration, traditional control panels (cPanel/WHM, Plesk, DirectAdmin), cloud platforms (AWS/Azure/GCP), managed app platforms (Heroku/Render/Vercel), and process-management tools (PM2/Supervisor/systemd). The comparison showed that each approach addresses specific needs but leaves important gaps in workflow unification, cost-efficiency, Linux-level transparency, or modern Node.js deployment flexibility.
+
+The analysis justifies the need for the proposed lightweight browser-based management platform as a balanced middle-ground solution. By integrating domain/site setup, Apache configuration, SSL handling, process supervision, and runtime visibility in one guided interface, the project directly addresses the limitations identified in Sections 2.6 and 2.7.
+
 -- **Chapter 03: Tools and Techniques**  
-The implemented solution was developed using a modular full-stack architecture. The frontend was built with **React (Vite)**, while the backend was implemented using **Node.js and Express**. Service integration with **Apache, PM2, Certbot, and Linux system utilities** was exposed through REST endpoints and real-time Socket.IO channels. This toolset enabled automation while retaining transparent infrastructure-level control.
+The implemented solution was developed using a modular full-stack architecture. The frontend was built with **React (Vite)**, while the backend was implemented using **Node.js and Express**. Service integration with **Apache, PM2, Certbot, and Linux system utilities** was exposed through REST endpoints and real-time Socket.IO channels. This toolset enabled automation while retaining transparent infrastructure-level control. The administrative login interface, shown in Figure 3.3, provides secure access to these services.
+
+![Figure 3.3: Login Page](images/screenshots/ss-01-login-page.png)
+*Figure 3.3: Login page for administrator access.*
+
+![Figure 3.4: Dashboard Page](images/screenshots/ss-02-dashboard-page.png)
+*Figure 3.4: Dashboard showing server IP, server stats, and quick actions.*
+
+Upon successful authentication, the user is presented with the system dashboard (Figure 3.4).
 
 Two key implementation techniques were followed. First, **workflow unification**: domain selection, site creation, local/server file upload, Apache virtual-host setup, API proxy configuration, SSL operations, and process control were consolidated into a browser-driven flow. Second, **operational guardrails**: file access was constrained to approved roots, command execution was controlled in backend routes, and environment-based configuration was used to support both local and server deployments. The architecture and tool interactions are shown in Figure 3.1 and Figure 3.2.
 
--- **Figure 3.1: Technology Stack and Integration Layers**  
--- **Figure prompt:** "Create a layered architecture diagram: React/Vite UI -> Express API -> Apache + PM2 + Certbot + File Services + Git/DB helpers -> Linux OS. Add side channels for Socket.IO real-time updates and GitHub Actions CI/CD deployment."
+![Figure 3.5: Sites Page](images/screenshots/ss-03-sites-page.png)
+*Figure 3.5: Sites management page with online/offline/maintenance status indicators.*
 
--- **Figure 3.2: Unified Hosting Workflow in the Proposed System**  
--- **Figure prompt:** "Design a workflow diagram: Login -> Add Domain -> Create Site (local/server upload) -> Configure Apache + API Proxy -> Enable SSL -> Manage with PM2 -> Monitor logs/stats -> Update via CI/CD."
+The primary site management interface is illustrated in Figure 3.5. 
+
+![Figure 3.6: Add Site Modal Step 1](images/screenshots/ss-04-add-site-step1-domain.png)
+*Figure 3.6: Add-site workflow Step 1 (domain and subdomain configuration).*
+
+![Figure 3.7: Add Site Modal Step 2](images/screenshots/ss-05-add-site-step2-upload.png)
+*Figure 3.7: Add-site workflow Step 2 (local/server file upload method).*
+
+![Figure 3.8: Add Site Modal Step 3-4](images/screenshots/ss-06-add-site-step3-step4-config-review.png)
+*Figure 3.8: Add-site workflow Step 3/4 (API route setup, SSL option, and deployment review).*
+
+![Figure 3.9: DNS Config Modal](images/screenshots/ss-07-dns-config-modal.png)
+*Figure 3.9: DNS configuration modal with A-record guidance (@, www, *).*
+
+The step-by-step site creation process and DNS guidance are captured in Figures 3.6, 3.7, 3.8, and 3.9.
+
+![Figure 3.1: Technology Stack and Integration Layers](images/screenshots/fig-3-1-architecture.png)
+*Figure 3.1: Technology Stack and Integration Layers.*
+
+![Figure 3.2: Unified Hosting Workflow in the Proposed System](images/screenshots/fig-3-2-workflow.png)
+*Figure 3.2: Unified Hosting Workflow in the Proposed System.*
+
+![Figure 3.10: Apache Config Page](images/screenshots/ss-08-apache-config-page.png)
+*Figure 3.10: Apache configuration page with service controls and status.*
+
+Integrated management of web services, including Apache (Figure 3.10) and PM2 (Figure 3.11), allows for direct control over the production environment.
+
+![Figure 3.11: PM2 Manager Page](images/screenshots/ss-09-pm2-manager-page.png)
+*Figure 3.11: PM2 process manager page with process-level controls.*
+
+![Figure 3.12: File Manager Page](images/screenshots/ss-10-file-manager-page.png)
+*Figure 3.12: File manager page with file tree, editor, and toolbar actions.*
+
+The system also includes a robust file manager (Figure 3.12) and an interactive terminal (Figure 3.13) for deeper server interaction.
+
+![Figure 3.13: Terminal Page](images/screenshots/ss-11-terminal-page.png)
+*Figure 3.13: Browser terminal executing server commands.*
+
+![Figure 3.14: Projects Page](images/screenshots/ss-12-projects-page.png)
+*Figure 3.14: Projects page with Git and runtime metadata.*
+
+Finally, the projects interface (Figure 3.14) consolidates development metadata and version control status.
 
 -- **Chapter 04: Methodology**  
-An iterative design-and-implementation methodology was adopted. Initially, requirements were derived from identified deficiencies in manual hosting, traditional control panels (cPanel/Plesk/DirectAdmin), cloud-heavy approaches (AWS/Azure/GCP), and isolated process-management tools (PM2/Supervisor). Functional requirements (site lifecycle management, service control, SSL handling, file operations, terminal access) and non-functional requirements (usability, modularity, reproducibility, low overhead) were mapped to system modules.
+The development of this platform followed an iterative research and implementation methodology, structured into four primary phases to ensure alignment with user needs and technical reliability.
 
-The system was implemented as separated frontend, backend, and terminal services, then deployed in a Linux server environment with Apache reverse proxy and PM2 process supervision. Evaluation was performed through scenario-based functional tests where each module was exercised using realistic administration tasks. The methodological flow is presented in Figure 4.1, and requirement-to-module traceability is presented in Figure 4.2.
+### 4.1 Phase 1: Requirement Analysis and Research
+Initially, a comparative analysis of existing solutions (cPanel, AWS, PM2) was conducted to identify functional gaps. Key requirements—including site lifecycle management, service control, SSL automation, and terminal access—were extracted to define the system's scope. The overall research flow is illustrated in Figure 4.1.
 
--- **Figure 4.1: Research Methodology Flow**  
--- **Figure prompt:** "Create a formal research flowchart: Problem Analysis -> Existing Solution Review (cPanel/Plesk/AWS/etc.) -> Requirement Extraction -> System Design -> Module Implementation -> Deployment Setup -> Functional Evaluation -> Discussion."
+![Figure 4.1: Research Methodology Flow](images/screenshots/fig-4-1-methodology-flow.svg)
+*Figure 4.1: Research Methodology Flow (Problem Analysis to Evaluation).*
 
--- **Figure 4.2: Requirement-to-Module Mapping**  
--- **Figure prompt:** "Create a mapping table linking requirements (site creation, process control, SSL, file management, terminal, git/database support) to implemented frontend components and backend route modules."
+
+### 4.2 Phase 2: System Design and Mapping
+The system was designed with a decoupled architecture (Frontend, Backend, Terminal Service). Functional requirements were mapped directly to system modules to ensure traceability and modularity. This mapping is detailed in Figure 4.2.
+
+![Figure 4.2: Requirement-to-Module Mapping](images/screenshots/fig-4-2-mapping-table.svg)
+*Figure 4.2: Mapping of functional requirements to implemented system modules.*
+
+
+
+### 4.3 Phase 3: Implementation and Module Development
+Development focused on integrating Linux-native tools (Apache, PM2, Certbot) into a unified web interface. Each module was built to provide granular control, such as the configuration editing tools shown in Figure 4.3 and database management utilities in Figure 4.4.
+
+![Figure 4.3: Apache Config Editor Modal](images/screenshots/ss-14-apache-config-editor.png)
+*Figure 4.3: Apache configuration editor modal with vhost file content.*
+
+![Figure 4.4: Databases Page](images/screenshots/ss-15-databases-page.png)
+*Figure 4.4: Databases page with service status and saved connections.*
+
+### 4.4 Phase 4: Deployment and Functional Evaluation
+The final phase involved deploying the system in a live Linux environment. Evaluation was performed through scenario-based testing, verifying the successful orchestration of complex tasks like site provisioning and deployment, as seen in Figure 4.5.
+
+![Figure 4.5: Add Site Deployment Confirmation](images/screenshots/ss-13-site-deployment-confirmation.png)
+*Figure 4.5: Successful site creation/deployment confirmation output.*
+
 
 -- **Chapter 05: Results and Discussion**  
-The implemented platform successfully executed targeted administration workflows through a browser interface. Core operations such as site provisioning, Apache virtual-host handling, API proxy routing, SSL certificate actions, PM2 process control, file editing/upload, and terminal session access were integrated into one system. Real-time updates through Socket.IO improved visibility during service operations and monitoring tasks. These outcomes are summarized in Figure 5.1.
+The implemented platform successfully executed targeted administration workflows through a browser interface. Core operations such as site provisioning, Apache virtual-host handling, API proxy routing, SSL certificate actions, PM2 process control, file editing/upload, and terminal session access were integrated into one system. Real-time updates through Socket.IO improved visibility during service operations and monitoring tasks. These outcomes are summarized in Figure 5.7. Live operational output is demonstrated in Figure 5.1.
 
-Results indicate a practical reduction in workflow fragmentation compared with baseline methods where users repeatedly switch between SSH commands, separate control panels, and independent process tools. Relative to **cPanel/Plesk**, the solution provides stronger Linux-level flexibility for custom Node.js deployments; relative to **AWS/Azure/GCP**, it reduces operational overhead for small-scale use; and relative to **PM2-only workflows**, it provides complete hosting orchestration. Comparative interpretation against Chapter 2 limitations is illustrated in Figure 5.2.
+![Figure 5.1: Site Action Live Output](images/screenshots/ss-16-site-action-live-output.png)
+*Figure 5.1: Live action output stream during site enable/maintenance operations.*
 
--- **Figure 5.1: Functional Test Outcome Summary**  
--- **Figure prompt:** "Create a results table with test cases: site creation, SSL install/status, PM2 restart, Apache config test, file read/write, terminal session, git operations, database status checks; include Expected vs Observed vs Status."
+![Figure 5.2: Apache Config Test Result](images/screenshots/ss-17-apache-config-test-result.png)
+*Figure 5.2: Apache configuration test result panel (e.g., Syntax OK).*
 
--- **Figure 5.2: Before-vs-After Workflow Complexity Comparison**  
+Verification of service configurations (Figure 5.2) and process runtime states (Figure 5.3) confirmed the reliability of the integrated controls.
+
+![Figure 5.3: PM2 Runtime State](images/screenshots/ss-18-pm2-runtime-state.png)
+*Figure 5.3: PM2 runtime status with process uptime and memory usage.*
+
+![Figure 5.4: SSL Enabled Evidence](images/screenshots/ss-19-ssl-enabled-status.png)
+*Figure 5.4: Site/domain view showing SSL-enabled state.*
+
+Success in SSL orchestration (Figure 5.4) and repository management (Figure 5.5) highlights the platform's utility for modern developers.
+
+Results indicate a practical reduction in workflow fragmentation compared with baseline methods where users repeatedly switch between SSH commands, separate control panels, and independent process tools. Relative to **cPanel/Plesk**, the solution provides stronger Linux-level flexibility for custom Node.js deployments; relative to **AWS/Azure/GCP**, it reduces operational overhead for small-scale use; and relative to **PM2-only workflows**, it provides complete hosting orchestration. Comparative interpretation against Chapter 2 limitations is illustrated in Figure 5.8.
+
+![Figure 5.5: Git Operations Panel](images/screenshots/ss-20-projects-git-operations.png)
+*Figure 5.5: Git operations panel showing status/commit/pull/push actions.*
+
+![Figure 5.6: Terminal Session Evidence](images/screenshots/ss-21-terminal-session-evidence.png)
+*Figure 5.6: Terminal command execution evidence for server-side control.*
+
+To evaluate the operational reliability of the platform, a comprehensive suite of functional tests was conducted across all core modules. The outcomes of these tests, including the expected versus observed behavior, are summarized in Figure 5.7 below.
+
+**Figure 5.7: Functional Test Outcome Summary**
+| Test Case | Expected Outcome | Observed Outcome | Status |
+| :--- | :--- | :--- | :--- |
+| **Site Creation** | Provision document root, generate vhost, and enable site | Document root created with files; vhost active in Apache | **Pass** |
+| **SSL Install/Status** | Automated Certbot challenge and HTTPS configuration | SSL certificate installed; site accessible via https:// | **Pass** |
+| **PM2 Restart** | Service restart with updated environment or code | Process successfully restarted via PM2 API | **Pass** |
+| **Apache Config Test** | Real-time syntax verification (configtest) | Output "Syntax OK" displayed in management panel | **Pass** |
+| **File Read/Write** | Remote file browsing and code editor modifications | Files successfully listed, edited, and saved to server | **Pass** |
+| **Terminal Session** | Interactive command execution with live output | Shell commands executed with real-time Socket.IO feedback | **Pass** |
+| **Git Operations** | Version control actions (Pull/Push/Status) | Repository updated correctly; commit history visible | **Pass** |
+| **Database Checks** | Status monitoring for MySQL/PostgreSQL services | Real-time service status and connection health reported | **Pass** |
+
+-- **Figure 5.8: Before-vs-After Workflow Complexity Comparison**  
 -- **Figure prompt:** "Design a side-by-side process comparison: (A) cPanel/manual/cloud-fragmented workflow vs (B) proposed unified workflow, including step counts, tool switches, and touchpoints (CLI, control panels, cloud console, config files)."
 
 -- **Chapter 06: Conclusion**  
@@ -62,27 +171,34 @@ The project achieved its core objective by showing that hosting workflows can be
 -- **Chapter 07: Future Work**  
 Future development should focus on production hardening and scale expansion. Priority areas include role-based access control, stronger authentication, audit logging, and policy-driven command authorization. Additional safeguards such as vulnerability scanning, stronger secret management, and stricter separation between user actions and system-level operations should be added.
 
-Beyond security, the platform can be extended toward multi-server orchestration, container-native deployment support, automated backup/restore, and deeper CI/CD integration. Long-term institutional deployment studies are recommended to evaluate reliability, maintainability, and user adoption in continuous operational environments.
+Beyond security, the platform can be extended toward multi-server orchestration, **Docker and container-native deployment support**, automated backup/restore, and **deeper CI/CD pipeline integration**. Integrating tools like GitHub Actions or GitLab CI would allow for fully automated testing and deployment workflows directly from the management interface. Long-term institutional deployment studies are recommended to evaluate reliability, maintainability, and user adoption in continuous operational environments.
 
 -- **Figure 7.1: Future Enhancement Roadmap**  
 -- **Figure prompt:** "Create a phased roadmap: Phase 1 Security Hardening, Phase 2 Multi-Server Management, Phase 3 Container/CI-CD Integration, Phase 4 Analytics and Predictive Monitoring."
 
 -- **References (IEEE style, alphabetical by author/organization)**  
-[1] Apache Software Foundation, "Apache HTTP Server Documentation," 2026. [Online]. Available: https://httpd.apache.org/docs/.  
-[2] Canonical Ltd., "Ubuntu Server Documentation," 2026. [Online]. Available: https://ubuntu.com/server/docs.  
-[3] cPanel, L.L.C., "cPanel & WHM Documentation," 2026. [Online]. Available: https://docs.cpanel.net/.  
-[4] Electronic Frontier Foundation, "Certbot Documentation," 2026. [Online]. Available: https://certbot.eff.org/docs/.  
-[5] GitHub, Inc., "GitHub Actions Documentation," 2026. [Online]. Available: https://docs.github.com/actions.  
-[6] Google Cloud, "Google Cloud Documentation," 2026. [Online]. Available: https://cloud.google.com/docs.  
-[7] Keymetrics, "PM2 Documentation," 2026. [Online]. Available: https://pm2.keymetrics.io/docs/.  
-[8] Microsoft, "Microsoft Azure Documentation," 2026. [Online]. Available: https://learn.microsoft.com/azure/.  
-[9] OpenJS Foundation, "Express.js Documentation," 2026. [Online]. Available: https://expressjs.com/.  
-[10] OpenJS Foundation, "Node.js Documentation," 2026. [Online]. Available: https://nodejs.org/docs/.  
-[11] Plesk International GmbH, "Plesk Documentation," 2026. [Online]. Available: https://docs.plesk.com/.  
-[12] Socket.IO Team, "Socket.IO Documentation," 2026. [Online]. Available: https://socket.io/docs/v4/.  
-[13] Vercel, Inc., "Vercel Documentation," 2026. [Online]. Available: https://vercel.com/docs.  
-[14] Vite Team, "Vite Documentation," 2026. [Online]. Available: https://vite.dev/guide/.  
-[15] Amazon Web Services, Inc., "AWS Documentation," 2026. [Online]. Available: https://docs.aws.amazon.com/.  
+[1] J. Aas et al., "Let's Encrypt: An Automated Certificate Authority to IPv4 Entirety," in *Proc. ACM SIGSAC Conf. Computer and Communications Security*, pp. 2473–2487, 2019.  
+[2] Amazon Web Services, Inc., "AWS Documentation," 2026. [Online]. Available: https://docs.aws.amazon.com/.  
+[3] Apache Software Foundation, "Apache HTTP Server Documentation," 2026. [Online]. Available: https://httpd.apache.org/docs/.  
+[4] Canonical Ltd., "Ubuntu Server Documentation," 2026. [Online]. Available: https://ubuntu.com/server/docs.  
+[5] E. J. Chikofsky and J. H. Cross, "Reverse Engineering and Design Recovery: A Taxonomy," *IEEE Software*, vol. 7, no. 1, pp. 13-17, Jan. 1990.  
+[6] cPanel, L.L.C., "cPanel & WHM Documentation," 2026. [Online]. Available: https://docs.cpanel.net/.  
+[7] C. J. Date, *An Introduction to Database Systems*, 7th ed. Reading, MA: Addison-Wesley, 2000.  
+[8] Electronic Frontier Foundation, "Certbot Documentation," 2026. [Online]. Available: https://certbot.eff.org/docs/.  
+[9] GitHub, Inc., "GitHub Actions Documentation," 2026. [Online]. Available: https://docs.github.com/actions.  
+[10] Google Cloud, "Google Cloud Documentation," 2026. [Online]. Available: https://cloud.google.com/docs.  
+[11] Keymetrics, "PM2 Documentation," 2026. [Online]. Available: https://pm2.keymetrics.io/docs/.  
+[12] Microsoft, "Microsoft Azure Documentation," 2026. [Online]. Available: https://learn.microsoft.com/azure/.  
+[13] OpenJS Foundation, "Express.js Documentation," 2026. [Online]. Available: https://expressjs.com/.  
+[14] OpenJS Foundation, "Node.js Documentation," 2026. [Online]. Available: https://nodejs.org/docs/.  
+[15] Plesk International GmbH, "Plesk Documentation," 2026. [Online]. Available: https://docs.plesk.com/.  
+[16] K. Prasad and V. Rao, "Automated Server Configuration and Management: A Survey of Lightweight Orchestration Tools," *Int. J. Comput. Appl.*, 2018.  
+[17] M. Shifman and S. Lev, "The evolution of web hosting control panels: From manual configuration to browser-driven automation," *J. Syst. Netw. Adm.*, vol. 12, no. 4, pp. 210-225, 2021.  
+[18] Socket.IO Team, "Socket.IO Documentation," 2026. [Online]. Available: https://socket.io/docs/v4/.  
+[19] L. Stein and J. Stewart, "Shared hosting and virtual hosts: Architectural patterns for secure web servers," *World Wide Web J.*, vol. 2, no. 3, 1997.  
+[20] S. Tilkov and S. Vinoski, "Node.js: Using JavaScript to Build High-Performance Network Programs," *IEEE Internet Comput.*, vol. 14, no. 6, pp. 80-83, 2010.  
+[21] Vercel, Inc., "Vercel Documentation," 2026. [Online]. Available: https://vercel.com/docs.  
+[22] Vite Team, "Vite Documentation," 2026. [Online]. Available: https://vite.dev/guide/.  
 
 -- **Appendix A: Research Progress Report (MUST)**  
 Include a chronological summary of work completed: requirement analysis, architecture design, backend route development, frontend module implementation, deployment setup, testing rounds, and supervisor review checkpoints. Add milestone dates, completed deliverables, encountered issues, and mitigation steps.

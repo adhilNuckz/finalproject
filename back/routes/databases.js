@@ -48,8 +48,7 @@ async function testConnection(db) {
   }
 
   if (type === 'mongo' || type === 'mongodb') {
-    const uri = db.uri || buildMongoUri(db);
-    const conn = await mongoose.createConnection(uri).asPromise();
+    const conn = await connectMongoWithFallback(db);
     await conn.close();
     return;
   }
@@ -63,11 +62,52 @@ function buildMongoUri(db) {
   const database = db.database || 'test';
   const user = db.user || db.username;
   const pass = db.password;
+  const authSource = db.authSource || db.authDatabase;
 
   if (user && pass) {
-    return `mongodb://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}`;
+    const query = authSource ? `?authSource=${encodeURIComponent(authSource)}` : '';
+    return `mongodb://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}${query}`;
   }
   return `mongodb://${host}:${port}/${database}`;
+}
+
+async function connectMongoWithFallback(db) {
+  if (db.uri) {
+    return mongoose.createConnection(db.uri).asPromise();
+  }
+
+  const baseHost = db.host || '127.0.0.1';
+  const basePort = db.port || 27017;
+  const baseDatabase = db.database || 'test';
+  const user = db.user || db.username;
+  const password = db.password;
+
+  if (!user || !password) {
+    return mongoose.createConnection(buildMongoUri(db)).asPromise();
+  }
+
+  const authSourceCandidates = Array.from(new Set([
+    db.authSource,
+    db.authDatabase,
+    db.database,
+    'admin',
+    'test'
+  ].filter(Boolean)));
+
+  let lastError = null;
+  for (const authSource of authSourceCandidates) {
+    const uri = `mongodb://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${baseHost}:${basePort}/${baseDatabase}?authSource=${encodeURIComponent(authSource)}`;
+    try {
+      return await mongoose.createConnection(uri, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 5000
+      }).asPromise();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('Authentication failed.');
 }
 
 async function getMysqlAdminConnection() {
@@ -88,6 +128,39 @@ async function getMysqlAdminConnection() {
   });
 }
 
+async function getMongoAdminConnection(db) {
+  const adminUri = process.env.MONGO_ADMIN_URI;
+  const host = db.host || process.env.MONGO_HOST || '127.0.0.1';
+  const port = db.port || process.env.MONGO_PORT || 27017;
+  const database = db.database || process.env.MONGO_DB || 'admin';
+  const user = db.user || process.env.MONGO_USER;
+  const password = db.password || process.env.MONGO_PASS;
+  const authSource = db.authSource || db.authDatabase || process.env.MONGO_AUTH_SOURCE || 'admin';
+
+  if (adminUri) {
+    return mongoose.createConnection(adminUri).asPromise();
+  }
+
+  if (user && password) {
+    const uri = `mongodb://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}?authSource=${encodeURIComponent(authSource)}`;
+    return mongoose.createConnection(uri).asPromise();
+  }
+
+  const uri = `mongodb://${host}:${port}/${database}`;
+  return mongoose.createConnection(uri).asPromise();
+}
+
+async function getMongoUnauthenticatedConnection(db) {
+  const host = db.host || process.env.MONGO_HOST || '127.0.0.1';
+  const port = db.port || process.env.MONGO_PORT || 27017;
+  const database = db.database || process.env.MONGO_DB || 'admin';
+  const uri = `mongodb://${host}:${port}/${database}`;
+  return mongoose.createConnection(uri, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000
+  }).asPromise();
+}
+
 function checkCommand(cmd) {
   return new Promise((resolve) => {
     exec(`command -v ${cmd} >/dev/null 2>&1`, (err) => {
@@ -100,6 +173,18 @@ function checkServiceActive(service) {
   return new Promise((resolve) => {
     exec(`systemctl is-active --quiet ${service}`, (err) => {
       resolve(!err);
+    });
+  });
+}
+
+function checkPackageInstalled(pkg) {
+  return new Promise((resolve) => {
+    exec(`dpkg -s ${pkg} 2>/dev/null`, (err, stdout) => {
+      if (err) {
+        resolve(false);
+        return;
+      }
+      resolve(String(stdout || '').includes('install ok installed'));
     });
   });
 }
@@ -120,22 +205,32 @@ router.get('/', (req, res) => {
 router.get('/status', async (req, res) => {
   try {
     const [
-      mysqlInstalled,
+      mysqlCmd,
+      mysqlPkg,
       mysqlActive,
-      mongoInstalled,
+      mongoCmd,
+      mongoPkg,
       mongoActive,
-      pgInstalled,
+      pgCmd,
+      pgPkg,
       pgActive,
       sqliteInstalled
     ] = await Promise.all([
       checkCommand('mysql'),
+      checkPackageInstalled('mysql-server'),
       checkServiceActive('mysql').catch(() => false),
       checkCommand('mongod'),
+      checkPackageInstalled('mongodb-org-server'),
       checkServiceActive('mongod').catch(() => false),
       checkCommand('psql'),
+      checkPackageInstalled('postgresql'),
       checkServiceActive('postgresql').catch(() => false),
       checkCommand('sqlite3')
     ]);
+
+    const mysqlInstalled = mysqlCmd || mysqlPkg || mysqlActive;
+    const mongoInstalled = mongoCmd || mongoPkg || mongoActive;
+    const pgInstalled = pgCmd || pgPkg || pgActive;
 
     const phpMyAdminInstalled = fs.existsSync('/usr/share/phpmyadmin') || fs.existsSync('/etc/phpmyadmin');
 
@@ -209,7 +304,7 @@ router.post('/install', (req, res) => {
   if (t === 'mysql') {
     cmd = `${sudoPrefix}apt-get update && ${sudoPrefix}apt-get install -y mysql-server`;
   } else if (t === 'mongo' || t === 'mongodb') {
-    cmd = `${sudoPrefix}apt-get update && ${sudoPrefix}apt-get install -y mongodb`;
+    cmd = `${sudoPrefix}apt-get update && ${sudoPrefix}apt-get install -y mongodb-org`;
   } else if (t === 'postgres' || t === 'postgresql' || t === 'pg') {
     cmd = `${sudoPrefix}apt-get update && ${sudoPrefix}apt-get install -y postgresql`;
   } else if (t === 'phpmyadmin') {
@@ -256,6 +351,61 @@ router.post('/mysql/create-user', async (req, res) => {
     if (conn) {
       try {
         await conn.end();
+      } catch {
+        // ignore
+      }
+    }
+  }
+});
+
+// POST create or update a MongoDB user on the selected database config
+router.post('/mongo/create-user/:id', async (req, res) => {
+  const { id } = req.params;
+  const { username, password, roles } = req.body || {};
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, error: 'username and password are required' });
+  }
+
+  if (!/^[A-Za-z0-9_.@-]+$/.test(username)) {
+    return res.status(400).json({ success: false, error: 'Invalid username format' });
+  }
+
+  const dbs = readDatabases();
+  const db = dbs.find((item) => item.id === id);
+
+  if (!db) {
+    return res.status(404).json({ success: false, error: 'Database config not found' });
+  }
+
+  if ((db.type || '').toLowerCase() !== 'mongo' && (db.type || '').toLowerCase() !== 'mongodb') {
+    return res.status(400).json({ success: false, error: 'Selected database is not MongoDB' });
+  }
+
+  const targetDb = db.database || 'admin';
+  const userRoles = Array.isArray(roles) && roles.length > 0 ? roles : [{ role: 'readWrite', db: targetDb }];
+
+  let conn;
+  try {
+    conn = await getMongoUnauthenticatedConnection(db);
+
+    await conn.db.admin().command({
+      createUser: username,
+      pwd: password,
+      roles: userRoles
+    });
+
+    res.json({
+      success: true,
+      message: `MongoDB user ${username} created/updated`,
+      database: targetDb
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message || 'Failed to create MongoDB user' });
+  } finally {
+    if (conn) {
+      try {
+        await conn.close();
       } catch {
         // ignore
       }
@@ -320,7 +470,7 @@ router.post('/:id/test', async (req, res) => {
   }
 
   try {
-    await testConnection(db);
+    await testConnection({ ...db, ...(req.body || {}) });
     res.json({ success: true, message: 'Connection successful' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message || 'Connection failed' });

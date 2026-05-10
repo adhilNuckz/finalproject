@@ -10,5 +10,43 @@
     "database": "",
     "uri": "",
     "createdAt": "2026-03-16T00:06:41.192Z"
+  },
+  {
+    "id": "moz29l54vrruk7ndw",
+    "name": "Testmongo",
+    "type": "mongo",
+    "host": "127.0.0.1",
+    "port": 27017,
+    "user": "test1",
+    "password": "test123",
+    "database": "",
+    "uri": "",
+    "createdAt": "2026-05-10T00:55:08.872Z",
+    "updatedAt": "2026-05-10T01:21:48.802Z"
+  },
+  {
+    "id": "moz38j9lm0cb0wl34",
+    "name": "test3",
+    "type": "mongo",
+    "host": "127.0.0.1",
+    "port": 27017,
+    "user": "test2",
+    "password": "test2123",
+    "database": "",
+    "uri": "",
+    "createdAt": "2026-05-10T01:22:19.401Z",
+    "updatedAt": "2026-05-10T01:22:28.270Z"
+  },
+  {
+    "id": "moz3ddlvnzjgoa45w",
+    "name": "test4",
+    "type": "mongo",
+    "host": "127.0.0.1",
+    "port": 27017,
+    "user": "test22",
+    "password": "test22123",
+    "database": "",
+    "uri": "",
+    "createdAt": "2026-05-10T01:26:05.347Z"
   }
 ]

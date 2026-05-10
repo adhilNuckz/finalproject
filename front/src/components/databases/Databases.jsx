@@ -12,6 +12,9 @@ export default function Databases() {
   const [installing, setInstalling] = useState({});
   const [selectedDbId, setSelectedDbId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedUserForm, setSelectedUserForm] = useState({ username: '', password: '', host: 'localhost' });
+  const [selectedMongoForm, setSelectedMongoForm] = useState({ username: '', password: '', authSource: 'admin' });
+  const [selectedActionLoading, setSelectedActionLoading] = useState({ test: false, createUser: false, mongoCreateUser: false });
   const [newDb, setNewDb] = useState({
     name: '',
     type: 'mysql',
@@ -28,6 +31,24 @@ export default function Databases() {
     fetchDatabases();
     fetchStatus();
   }, []);
+
+  useEffect(() => {
+    if (!selectedDbId) return;
+    const db = databases.find((item) => item.id === selectedDbId);
+    if (!db) return;
+    setSelectedUserForm((prev) => ({
+      ...prev,
+      username: db.user || prev.username,
+      password: db.password || prev.password,
+      host: db.host || 'localhost'
+    }));
+    setSelectedMongoForm((prev) => ({
+      ...prev,
+      username: db.user || prev.username,
+      password: db.password || prev.password,
+      authSource: db.authSource || db.authDatabase || prev.authSource || 'admin'
+    }));
+  }, [selectedDbId, databases]);
 
   const fetchDatabases = async () => {
     setLoading(true);
@@ -157,10 +178,32 @@ export default function Databases() {
     }
   };
 
-  const handleTest = async (id) => {
+  const handleTest = async (dbOrId) => {
+    const db = typeof dbOrId === 'object' ? dbOrId : databases.find((item) => item.id === dbOrId);
+    const id = typeof dbOrId === 'object' ? dbOrId.id : dbOrId;
+    const isMongo = db && ((db.type || '').toLowerCase() === 'mongo' || (db.type || '').toLowerCase() === 'mongodb');
+    const isSelectedMongoRow = isMongo && selectedDbId === id;
+
     setActionLoading(prev => ({ ...prev, [`test-${id}`]: true }));
     try {
-      const res = await fetch(`${API_BASE_URL}/databases/${id}/test`, { method: 'POST' });
+      const body = isMongo ? {
+        user: isSelectedMongoRow && selectedMongoForm.username ? selectedMongoForm.username : (db?.user || db?.username || ''),
+        password: isSelectedMongoRow && selectedMongoForm.password ? selectedMongoForm.password : (db?.password || ''),
+        authSource: isSelectedMongoRow && selectedMongoForm.authSource
+          ? selectedMongoForm.authSource
+          : (db?.authSource || db?.authDatabase || 'admin')
+      } : {};
+
+      if (isMongo && (!body.user || !body.password)) {
+        alert('Enter MongoDB username and password in the selected panel before testing.');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/databases/${id}/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
       const data = await res.json();
       if (data.success) {
         alert('Connection successful');
@@ -171,6 +214,130 @@ export default function Databases() {
       alert('Failed to connect to server');
     } finally {
       setActionLoading(prev => ({ ...prev, [`test-${id}`]: false }));
+    }
+  };
+
+  const handleSelectedTest = async () => {
+    if (!selectedDbId) return;
+    const db = databases.find((item) => item.id === selectedDbId);
+    const isMongo = db && (db.type || '').toLowerCase() === 'mongo' || (db && (db.type || '').toLowerCase() === 'mongodb');
+    setSelectedActionLoading(prev => ({ ...prev, test: true }));
+    try {
+      const body = isMongo ? {
+        user: selectedMongoForm.username,
+        password: selectedMongoForm.password,
+        authSource: selectedMongoForm.authSource
+      } : {};
+      const res = await fetch(`${API_BASE_URL}/databases/${selectedDbId}/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Connection successful');
+      } else {
+        alert(data.error || 'Connection failed');
+      }
+    } catch {
+      alert('Failed to connect to server');
+    } finally {
+      setSelectedActionLoading(prev => ({ ...prev, test: false }));
+    }
+  };
+
+  const handleCreateSelectedMysqlUser = async () => {
+    if (!selectedDbId) return;
+    if (!selectedUserForm.username.trim() || !selectedUserForm.password.trim()) {
+      alert('Username and password are required');
+      return;
+    }
+
+    setSelectedActionLoading(prev => ({ ...prev, createUser: true }));
+    try {
+      const res = await fetch(`${API_BASE_URL}/databases/mysql/create-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: selectedUserForm.username,
+          password: selectedUserForm.password,
+          host: selectedUserForm.host || 'localhost'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'MySQL user created/updated');
+      } else {
+        alert(data.error || 'Failed to create MySQL user');
+      }
+    } catch {
+      alert('Failed to connect to server');
+    } finally {
+      setSelectedActionLoading(prev => ({ ...prev, createUser: false }));
+    }
+  };
+
+  const handleCreateSelectedMongoUser = async () => {
+    if (!selectedDbId) return;
+    if (!selectedMongoForm.username.trim() || !selectedMongoForm.password.trim()) {
+      alert('Username and password are required');
+      return;
+    }
+
+    setSelectedActionLoading(prev => ({ ...prev, mongoCreateUser: true }));
+    try {
+      const createRes = await fetch(`${API_BASE_URL}/databases/mongo/create-user/${selectedDbId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: selectedMongoForm.username,
+          password: selectedMongoForm.password,
+          authSource: selectedMongoForm.authSource || 'admin'
+        })
+      });
+      if (createRes.status !== 404) {
+        const createData = await createRes.json();
+        if (createData.success) {
+          alert(createData.message || 'MongoDB user created/updated');
+        } else {
+          alert(createData.error || 'Failed to create MongoDB user');
+        }
+        return;
+      }
+
+      const updateRes = await fetch(`${API_BASE_URL}/databases/${selectedDbId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user: selectedMongoForm.username,
+          password: selectedMongoForm.password,
+          authSource: selectedMongoForm.authSource || 'admin'
+        })
+      });
+      const updateData = await updateRes.json();
+      if (updateData.success) {
+        const testRes = await fetch(`${API_BASE_URL}/databases/${selectedDbId}/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: selectedMongoForm.username,
+            password: selectedMongoForm.password,
+            authSource: selectedMongoForm.authSource || 'admin'
+          })
+        });
+        const testData = await testRes.json();
+        if (testData.success) {
+          alert('MongoDB credentials saved and connection tested');
+        } else {
+          alert(testData.error || 'MongoDB credentials saved, but connection test failed');
+        }
+      } else {
+        alert(updateData.error || 'Failed to save MongoDB credentials');
+      }
+    } catch {
+      alert('Failed to connect to server');
+    } finally {
+      setSelectedActionLoading(prev => ({ ...prev, mongoCreateUser: false }));
     }
   };
 
@@ -279,18 +446,22 @@ export default function Databases() {
                     )}
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => handleInstall(key)}
-                      disabled={installing[installKey]}
-                      className="px-2 py-1 text-[11px] rounded-md bg-lava-600 text-white hover:bg-lava-700 disabled:opacity-70"
-                    >
-                      {installing[installKey] ? (
-                        <Loader2 className="w-3 h-3 animate-spin inline-block" />
-                      ) : (
-                        'Install'
-                      )}
-                    </button>
+                    {!installed ? (
+                      <button
+                        type="button"
+                        onClick={() => handleInstall(key)}
+                        disabled={installing[installKey]}
+                        className="px-2 py-1 text-[11px] rounded-md bg-lava-600 text-white hover:bg-lava-700 disabled:opacity-70"
+                      >
+                        {installing[installKey] ? (
+                          <Loader2 className="w-3 h-3 animate-spin inline-block" />
+                        ) : (
+                          'Install'
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-emerald-400">Ready</span>
+                    )}
                     {key === 'phpmyadmin' && info.url && installed && (
                       <a
                         href={info.url}
@@ -356,7 +527,7 @@ export default function Databases() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleTest(db.id);
+                    handleTest(db);
                   }}
                   disabled={actionLoading[`test-${db.id}`]}
                   className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 disabled:opacity-70"
@@ -414,7 +585,113 @@ export default function Databases() {
                     <div><span className="text-gray-500">Created:</span> {new Date(db.createdAt).toLocaleString()}</div>
                   )}
                 </div>
+                <div className="mt-3 pt-3 border-t border-[#1f1f1f] flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSelectedTest}
+                    disabled={selectedActionLoading.test}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 disabled:opacity-70"
+                  >
+                    {selectedActionLoading.test ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-3 h-3" />
+                    )}
+                    Test connection
+                  </button>
+                </div>
               </div>
+
+              {isMySql && (
+                <div className="bg-[#141414] rounded-xl border border-[#1f1f1f] p-4">
+                  <h2 className="text-sm font-semibold text-gray-200 mb-2">Create MySQL user</h2>
+                  <p className="text-xs text-gray-500 mb-3">Creates or updates a MySQL user from this panel. Requires backend `MYSQL_ADMIN_USER`.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      placeholder="username"
+                      className="px-3 py-2 text-sm rounded-lg bg-[#181818] border border-[#2a2a2a] text-gray-100 focus:outline-none focus:border-lava-500"
+                      value={selectedUserForm.username}
+                      onChange={(e) => setSelectedUserForm(prev => ({ ...prev, username: e.target.value }))}
+                    />
+                    <input
+                      type="password"
+                      placeholder="password"
+                      className="px-3 py-2 text-sm rounded-lg bg-[#181818] border border-[#2a2a2a] text-gray-100 focus:outline-none focus:border-lava-500"
+                      value={selectedUserForm.password}
+                      onChange={(e) => setSelectedUserForm(prev => ({ ...prev, password: e.target.value }))}
+                    />
+                    <input
+                      type="text"
+                      placeholder="host (localhost)"
+                      className="px-3 py-2 text-sm rounded-lg bg-[#181818] border border-[#2a2a2a] text-gray-100 focus:outline-none focus:border-lava-500"
+                      value={selectedUserForm.host}
+                      onChange={(e) => setSelectedUserForm(prev => ({ ...prev, host: e.target.value }))}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={handleCreateSelectedMysqlUser}
+                      disabled={selectedActionLoading.createUser}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-lava-600 text-white hover:bg-lava-700 disabled:opacity-70 flex items-center gap-1"
+                    >
+                      {selectedActionLoading.createUser ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      Create/Update user
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {db.type && (db.type.toLowerCase() === 'mongo' || db.type.toLowerCase() === 'mongodb') && (
+                <div className="bg-[#141414] rounded-xl border border-[#1f1f1f] p-4">
+                  <h2 className="text-sm font-semibold text-gray-200 mb-2">MongoDB credentials</h2>
+                  <p className="text-xs text-gray-500 mb-3">Create a MongoDB user or test an authenticated MongoDB connection from this page.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      placeholder="username"
+                      className="px-3 py-2 text-sm rounded-lg bg-[#181818] border border-[#2a2a2a] text-gray-100 focus:outline-none focus:border-lava-500"
+                      value={selectedMongoForm.username}
+                      onChange={(e) => setSelectedMongoForm(prev => ({ ...prev, username: e.target.value }))}
+                    />
+                    <input
+                      type="password"
+                      placeholder="password"
+                      className="px-3 py-2 text-sm rounded-lg bg-[#181818] border border-[#2a2a2a] text-gray-100 focus:outline-none focus:border-lava-500"
+                      value={selectedMongoForm.password}
+                      onChange={(e) => setSelectedMongoForm(prev => ({ ...prev, password: e.target.value }))}
+                    />
+                    <input
+                      type="text"
+                      placeholder="auth source (admin)"
+                      className="px-3 py-2 text-sm rounded-lg bg-[#181818] border border-[#2a2a2a] text-gray-100 focus:outline-none focus:border-lava-500"
+                      value={selectedMongoForm.authSource}
+                      onChange={(e) => setSelectedMongoForm(prev => ({ ...prev, authSource: e.target.value }))}
+                    />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCreateSelectedMongoUser}
+                      disabled={selectedActionLoading.mongoCreateUser}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-lava-600 text-white hover:bg-lava-700 disabled:opacity-70 flex items-center gap-1"
+                    >
+                      {selectedActionLoading.mongoCreateUser ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      Create/Update MongoDB user
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSelectedTest}
+                      disabled={selectedActionLoading.test}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 disabled:opacity-70"
+                    >
+                      {selectedActionLoading.test ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                      Test MongoDB credentials
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {phpMyAdminAvailable && (
                 <div className="bg-[#141414] rounded-xl border border-[#1f1f1f] overflow-hidden">
