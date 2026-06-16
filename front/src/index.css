@@ -58,16 +58,16 @@
 }
 
 @layer utilities {
-  .bg-\[\#0a0a0a\] { background-color: #0a0a0a !important; }
-  .bg-\[\#0b0b0b\] { background-color: #0b0b0b !important; }
-  .bg-\[\#0e0e0e\] { background-color: #0e0e0e !important; }
-  .bg-\[\#101010\] { background-color: #101010 !important; }
-  .bg-\[\#111111\] { background-color: #111111 !important; }
-  .bg-\[\#141414\] { background-color: #141414 !important; }
-  .bg-\[\#151515\] { background-color: #151515 !important; }
-  .bg-\[\#1a1a1a\] { background-color: #1a1a1a !important; }
-  .bg-\[\#1f1f1f\] { background-color: #1f1f1f !important; }
-  .bg-\[\#252525\] { background-color: #252525 !important; }
+  .bg-\[\#0a0a0a\] { background-color: #f8fafc !important; }
+  .bg-\[\#0b0b0b\] { background-color: #f8fafc !important; }
+  .bg-\[\#0e0e0e\] { background-color: #f1f5f9 !important; }
+  .bg-\[\#101010\] { background-color: #f1f5f9 !important; }
+  .bg-\[\#111111\] { background-color: #f1f5f9 !important; }
+  .bg-\[\#141414\] { background-color: #ffffff !important; }
+  .bg-\[\#151515\] { background-color: #ffffff !important; }
+  .bg-\[\#1a1a1a\] { background-color: #f8fafc !important; }
+  .bg-\[\#1f1f1f\] { background-color: #e2e8f0 !important; }
+  .bg-\[\#252525\] { background-color: #cbd5e1 !important; }
 
   .border-\[\#1a1a1a\],
   .border-\[\#1f1f1f\],
@@ -80,13 +80,13 @@
     border-color: #e2e8f0 !important;
   }
 
-  .text-gray-100 { color: #f7fafc !important; }
-  .text-gray-200 { color: #edf2f7 !important; }
-  .text-gray-300 { color: #e2e8f0 !important; }
-  .text-gray-400 { color: #cbd5e1 !important; }
-  .text-gray-500 { color: #94a3b8 !important; }
-  .text-gray-600 { color: #64748b !important; }
-  .text-white { color: #ffffff !important; }
+  .text-gray-100 { color: #0f172a !important; }
+  .text-gray-200 { color: #1e293b !important; }
+  .text-gray-300 { color: #334155 !important; }
+  .text-gray-400 { color: #475569 !important; }
+  .text-gray-500 { color: #64748b !important; }
+  .text-gray-600 { color: #94a3b8 !important; }
+  .text-white { color: #0f172a !important; }
 
   .text-lava-300 { color: #c2410c !important; }
   .text-lava-400 { color: #c2410c !important; }
