@@ -6,9 +6,20 @@ import { Plus, X, Download } from "lucide-react";
 import io from "socket.io-client";
 import "xterm/css/xterm.css";
 import { API_BASE_URL, TERMINAL_URL } from '../../config';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 
 function isLocalhostHostname(hostname) {
   return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function getTerminalTheme(theme) {
+  const isDark = theme === 'dark';
+  return {
+    background: isDark ? '#0f172a' : '#f8fafc',
+    foreground: isDark ? '#e2e8f0' : '#0f172a',
+    cursor: isDark ? '#fb923c' : '#f97316',
+    selectionBackground: isDark ? '#334155' : '#cbd5e1',
+  };
 }
 
 async function resolveTerminalUrl() {
@@ -35,10 +46,17 @@ async function resolveTerminalUrl() {
 }
 
 export default function Terminal() {
+  const { theme } = useTheme();
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const socketRef = useRef(null);
   const terminalsRef = useRef(new Map()); // sessionId -> { term, fitAddon, containerRef }
+
+  useEffect(() => {
+    terminalsRef.current.forEach(({ term }) => {
+      term.options.theme = getTerminalTheme(theme);
+    });
+  }, [theme]);
 
   useEffect(() => {
     let cancelled = false;
@@ -203,10 +221,7 @@ export default function Terminal() {
       fontFamily: "monospace",
       fontSize: 14,
       cursorBlink: true,
-      theme: {
-        background: "#f8fafc",
-        foreground: "#0f172a",
-      },
+      theme: getTerminalTheme(theme),
       scrollback: 1000,
     });
 
@@ -270,14 +285,14 @@ export default function Terminal() {
   return (
     <div className="h-full flex flex-col">
       {/* Tabs Bar */}
-      <div className="flex items-center bg-white border-b border-slate-200 overflow-x-auto">
+      <div className="flex items-center bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 overflow-x-auto">
         {sessions.map((session) => (
           <div
             key={session.id}
             className={`flex items-center gap-2 px-4 py-2 border-r border-[#1f1f1f] cursor-pointer transition-colors ${
               activeSessionId === session.id
-                ? "bg-orange-50 text-lava-700"
-                : "bg-white text-slate-600 hover:bg-slate-100"
+                ? "bg-orange-50 dark:bg-orange-900/30 text-lava-700 dark:text-orange-200"
+                : "bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
             onClick={() => setActiveSessionId(session.id)}
           >
@@ -299,7 +314,7 @@ export default function Terminal() {
                 e.stopPropagation();
                 closeSession(session.id);
               }}
-               className="p-1 hover:bg-rose-100 rounded transition-colors"
+              className="p-1 hover:bg-rose-100 rounded transition-colors"
               title="Close session"
             >
               <X className="w-3 h-3" />
@@ -310,7 +325,7 @@ export default function Terminal() {
         {/* Add New Session Button */}
         <button
           onClick={createNewSession}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-slate-600 hover:bg-slate-100 hover:text-lava-700 transition-colors whitespace-nowrap"
+          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-lava-700 transition-colors whitespace-nowrap"
           title="New terminal session"
         >
           <Plus className="w-4 h-4" />
@@ -319,7 +334,7 @@ export default function Terminal() {
       </div>
 
       {/* Terminal Content */}
-      <div className="flex-1 relative bg-slate-50">
+      <div className="flex-1 relative bg-slate-50 dark:bg-slate-950">
         {sessions.map((session) => (
           <div
             key={session.id}
@@ -338,7 +353,7 @@ export default function Terminal() {
         ))}
         
         {sessions.length === 0 && (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="flex items-center justify-center h-full text-gray-500 dark:text-slate-400">
             <div className="text-center">
               <p className="text-lg mb-2">No terminal sessions</p>
               <button

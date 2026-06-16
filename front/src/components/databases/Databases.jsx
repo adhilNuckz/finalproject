@@ -15,6 +15,7 @@ export default function Databases() {
   const [selectedUserForm, setSelectedUserForm] = useState({ username: '', password: '', host: 'localhost' });
   const [selectedMongoForm, setSelectedMongoForm] = useState({ username: '', password: '', authSource: 'admin' });
   const [selectedActionLoading, setSelectedActionLoading] = useState({ test: false, createUser: false, mongoCreateUser: false });
+  const [serviceActionLoading, setServiceActionLoading] = useState({});
   const [newDb, setNewDb] = useState({
     name: '',
     type: 'mysql',
@@ -80,6 +81,28 @@ export default function Databases() {
       // ignore, leave systemStatus null
     } finally {
       setStatusLoading(false);
+    }
+  };
+
+  const handleStartService = async (type) => {
+    const key = `start-${type}`;
+    setServiceActionLoading((prev) => ({ ...prev, [key]: true }));
+    try {
+      const res = await fetch(`${API_BASE_URL}/databases/service/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchStatus();
+      } else {
+        alert(data.error || `Failed to start ${typeLabel(type)} service`);
+      }
+    } catch {
+      alert('Failed to connect to server');
+    } finally {
+      setServiceActionLoading((prev) => ({ ...prev, [key]: false }));
     }
   };
 
@@ -459,6 +482,19 @@ export default function Databases() {
                           'Install'
                         )}
                       </button>
+                    ) : typeof active === 'boolean' && !active && key !== 'phpmyadmin' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleStartService(key)}
+                        disabled={serviceActionLoading[`start-${key}`]}
+                        className="px-2 py-1 text-[11px] rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-70"
+                      >
+                        {serviceActionLoading[`start-${key}`] ? (
+                          <Loader2 className="w-3 h-3 animate-spin inline-block" />
+                        ) : (
+                          'Start service'
+                        )}
+                      </button>
                     ) : (
                       <span className="text-[11px] text-emerald-400">Ready</span>
                     )}
@@ -506,9 +542,18 @@ export default function Databases() {
             <div
               key={db.id}
               className={`bg-[#141414] rounded-xl border p-5 flex items-center justify-between cursor-pointer transition-colors ${
-                selectedDbId === db.id ? 'border-lava-500/70' : 'border-[#1f1f1f] hover:border-[#2a2a2a]'
+                selectedDbId === db.id ? 'border-lava-500/70 ring-1 ring-lava-500/20' : 'border-[#1f1f1f] hover:border-[#2a2a2a]'
               }`}
               onClick={() => setSelectedDbId(db.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedDbId(db.id);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selectedDbId === db.id}
             >
               <div>
                 <div className="flex items-center gap-2">
@@ -521,6 +566,9 @@ export default function Databases() {
                   {db.uri
                     ? db.uri
                     : `${db.user || 'user'}@${db.host || 'host'}:${db.port || (db.type === 'mysql' ? 3306 : db.type === 'mongo' || db.type === 'mongodb' ? 27017 : '')}/${db.database || ''}`}
+                </div>
+                <div className="mt-2 text-[11px] text-gray-500">
+                  Click to view details
                 </div>
               </div>
               <div className="flex items-center gap-2">

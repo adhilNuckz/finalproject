@@ -104,6 +104,20 @@ function checkServiceActive(service) {
   });
 }
 
+function startService(service) {
+  return new Promise((resolve, reject) => {
+    const isRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+    const prefix = isRoot ? '' : 'sudo ';
+    exec(`${prefix}systemctl start ${service}`, (err, stdout, stderr) => {
+      if (err) {
+        reject(new Error(stderr || err.message || `Failed to start ${service}`));
+        return;
+      }
+      resolve(stdout || `Started ${service}`);
+    });
+  });
+}
+
 // ==================== Routes ====================
 
 // GET all database connections
@@ -155,6 +169,39 @@ router.get('/status', async (req, res) => {
         phpmyadmin: { installed: phpMyAdminInstalled, url: phpMyAdminUrl }
       }
     });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// POST start a database service on this machine
+router.post('/service/start', async (req, res) => {
+  try {
+    const type = String(req.body?.type || '').toLowerCase();
+    const serviceMap = {
+      mysql: ['mysql', 'mariadb'],
+      mongo: ['mongod', 'mongodb'],
+      mongodb: ['mongod', 'mongodb'],
+      postgres: ['postgresql'],
+      postgresql: ['postgresql']
+    };
+
+    const candidates = serviceMap[type];
+    if (!candidates) {
+      return res.status(400).json({ success: false, error: 'Unsupported service type' });
+    }
+
+    let lastError = null;
+    for (const service of candidates) {
+      try {
+        const output = await startService(service);
+        return res.json({ success: true, service, output });
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error('Failed to start service');
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

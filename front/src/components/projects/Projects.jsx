@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 import {
   FolderGit2, Plus, RefreshCw, Trash2, GitBranch, GitCommit,
   ArrowDownToLine, ArrowUpFromLine, Globe, Activity, FolderOpen, ChevronRight,
@@ -31,6 +32,16 @@ async function resolveTerminalUrl() {
     if (uiHostname && !isLocalhostHostname(uiHostname)) {
       url.hostname = uiHostname;
       return url.toString();
+    }
+
+    function getTerminalTheme(theme) {
+      const isDark = theme === 'dark';
+      return {
+        background: isDark ? '#0f172a' : '#f8fafc',
+        foreground: isDark ? '#e2e8f0' : '#0f172a',
+        cursor: isDark ? '#fb923c' : '#f97316',
+        selectionBackground: isDark ? '#334155' : '#cbd5e1',
+      };
     }
 
     const res = await fetch(`${API_URL}/server/ip`);
@@ -904,11 +915,18 @@ function CodePanelComponent({ project }) {
 // ==================== Terminal Panel Component ====================
 
 function TerminalPanelComponent({ project }) {
+  const { theme } = useTheme();
   const termRef = useRef(null);
   const socketRef = useRef(null);
   const termInstance = useRef(null);
   const fitAddonRef = useRef(null);
   const sessionId = useRef(`proj-${project.id}-${Date.now()}`);
+
+  useEffect(() => {
+    if (termInstance.current) {
+      termInstance.current.options.theme = getTerminalTheme(theme);
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!termRef.current) return;
@@ -919,10 +937,7 @@ function TerminalPanelComponent({ project }) {
       fontFamily: 'monospace',
       fontSize: 13,
       cursorBlink: true,
-      theme: {
-        background: '#0a0a0a',
-        foreground: '#00ff66',
-      },
+      theme: getTerminalTheme(theme),
       scrollback: 1000,
     });
 
@@ -982,16 +997,22 @@ function TerminalPanelComponent({ project }) {
   }, []);
 
   return (
-    <div className="border-t border-[#1f1f1f]">
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-900">
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <TerminalSquare className="w-3.5 h-3.5 text-green-500" />
+    <div className="border-t border-[#1f1f1f] dark:border-slate-800">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-slate-900">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400">
+          <TerminalSquare className="w-3.5 h-3.5 text-green-500 dark:text-emerald-400" />
           <span>Terminal</span>
-          <span className="text-gray-600">—</span>
-          <span className="text-green-500 font-mono">{project.path}</span>
+          <span className="text-gray-600 dark:text-slate-600">—</span>
+          <span className="text-green-600 dark:text-emerald-400 font-mono">{project.path}</span>
         </div>
       </div>
-      <div ref={termRef} style={{ height: '300px', background: '#0a0a0a' }} />
+      <div
+        ref={termRef}
+        style={{
+          height: '300px',
+          background: theme === 'dark' ? '#0f172a' : '#f8fafc',
+        }}
+      />
     </div>
   );
 }
