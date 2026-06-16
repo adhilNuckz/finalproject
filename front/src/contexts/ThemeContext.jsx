@@ -4,11 +4,11 @@ const ThemeContext = createContext(undefined);
 
 export function ThemeProvider({ children }) {
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme: 'dark', toggleTheme: () => {} }}>
+    <ThemeContext.Provider value={{ theme: 'light', toggleTheme: () => {} }}>
       {children}
     </ThemeContext.Provider>
   );

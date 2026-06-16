@@ -127,18 +127,18 @@ export default function Dashboard() {
                 <Server className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm text-orange-100/90">
-                  <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                <div className="flex items-center gap-2 text-sm text-slate-700">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   Server IP Address
                 </div>
-                <div className="min-h-8 text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
+                <div className="min-h-8 text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900">
                   {isLoadingIp ? (
                     <div className="h-8 w-56 rounded-lg bg-white/10 animate-pulse" />
                   ) : (
                     serverIp
                   )}
                 </div>
-                <p className="text-xs text-orange-100/80">
+                <p className="text-xs text-slate-600">
                   Point your domain&apos;s A record to this IP address to bring the site online.
                 </p>
               </div>

@@ -15,14 +15,14 @@ const navigation = [
 
 export default function Sidebar({ currentPage, onPageChange }) {
   return (
-    <div className="w-64 bg-[#0a0a0a] border-r border-[#1a1a1a] flex flex-col">
-      <div className="p-6 border-b border-[#1a1a1a]">
+    <div className="w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm">
+      <div className="p-6 border-b border-slate-200">
         <div className="flex items-center">
           <div className="w-10 h-10 lava-gradient rounded-lg flex items-center justify-center lava-glow">
             <Server className="w-6 h-6 text-white" />
           </div>
           <div className="ml-3">
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-lg font-semibold text-slate-900">
               Hosting Manager
             </h1>
           </div>
@@ -41,8 +41,8 @@ export default function Sidebar({ currentPage, onPageChange }) {
                   onClick={() => onPageChange(item.id)}
                   className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-r from-lava-600/20 to-lava-500/10 text-lava-400 border-l-2 border-lava-500'
-                      : 'text-gray-400 hover:bg-[#1a1a1a] hover:text-lava-300 border-l-2 border-transparent'
+                      ? 'bg-gradient-to-r from-lava-100 to-orange-50 text-lava-700 border-l-2 border-lava-500'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-lava-700 border-l-2 border-transparent'
                   }`}
                 >
                   <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-lava-400' : ''}`} />
