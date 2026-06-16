@@ -19,6 +19,8 @@ const API_BASE = API_BASE_URL;
 export default function AddSiteModal({ onClose, onCreated, isServerInterface = false }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdSiteUrl, setCreatedSiteUrl] = useState('');
   
   // Form data
   const [formData, setFormData] = useState({
@@ -184,7 +186,9 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
       
       if (data.success) {
         onCreated();
-        onClose();
+        const siteUrl = formData.subdomain ? `${formData.subdomain}.${formData.domain}` : formData.domain;
+        setCreatedSiteUrl(siteUrl);
+        setShowSuccess(true);
       } else {
         alert('Failed to create site: ' + (data.error || 'Unknown error'));
       }
@@ -259,7 +263,36 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {step === 1 && (
+          {showSuccess ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-20 h-20 bg-green-900/20 rounded-full flex items-center justify-center mb-6 border-2 border-green-500/30">
+                <Check className="w-10 h-10 text-green-500" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-100 mb-2">Successfully Deployed!</h2>
+              <p className="text-gray-400 text-lg mb-8">
+                Your site <span className="text-lava-400 font-semibold">{createdSiteUrl}</span> is now live and ready to use.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={onClose}
+                  className="px-8 py-3 bg-[#1f1f1f] hover:bg-[#252525] text-gray-200 rounded-xl font-semibold transition-all border border-[#333]"
+                >
+                  OK
+                </button>
+                <a
+                  href={`http://${createdSiteUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-3 bg-lava-600 hover:bg-lava-700 text-white rounded-xl font-semibold transition-all flex items-center shadow-lg shadow-lava-900/20"
+                >
+                  <Globe className="w-5 h-5 mr-2" />
+                  Visit Site
+                </a>
+              </div>
+            </div>
+          ) : (
+            <>
+              {step === 1 && (
             <div className="space-y-6">
               {/* Domain Selection */}
               <div>
@@ -804,46 +837,62 @@ export default function AddSiteModal({ onClose, onCreated, isServerInterface = f
               </div>
             </div>
           )}
+          </>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-[#1f1f1f]">
-          <button
-            onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-            className="px-4 py-2 text-gray-300 hover:bg-[#1a1a1a] rounded-lg transition-colors"
-          >
-            {step === 1 ? 'Cancel' : 'Previous'}
-          </button>
-          
-          <div className="flex space-x-2">
-            {step < 4 ? (
+          {!showSuccess && (
+            <>
               <button
-                onClick={() => setStep(step + 1)}
-                disabled={!isStepValid()}
-                className="px-6 py-2 bg-lava-600 hover:bg-lava-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => step > 1 ? setStep(step - 1) : onClose()}
+                className="px-4 py-2 text-gray-300 hover:bg-[#1a1a1a] rounded-lg transition-colors"
               >
-                Next
+                {step === 1 ? 'Cancel' : 'Previous'}
               </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Deploying...
-                  </>
+              
+              <div className="flex space-x-2">
+                {step < 4 ? (
+                  <button
+                    onClick={() => setStep(step + 1)}
+                    disabled={!isStepValid()}
+                    className="px-6 py-2 bg-lava-600 hover:bg-lava-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
                 ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Deploy Site
-                  </>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Deploying...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Deploy Site
+                      </>
+                    )}
+                  </button>
                 )}
+              </div>
+            </>
+          )}
+          {showSuccess && (
+            <div className="w-full flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-lava-600 hover:bg-lava-700 text-white rounded-lg transition-colors"
+              >
+                Close
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

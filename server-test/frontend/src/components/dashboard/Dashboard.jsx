@@ -127,18 +127,18 @@ export default function Dashboard() {
                 <Server className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm text-orange-100/90">
-                  <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   Server IP Address
                 </div>
-                <div className="min-h-8 text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
+                <div className="min-h-8 text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {isLoadingIp ? (
                     <div className="h-8 w-56 rounded-lg bg-white/10 animate-pulse" />
                   ) : (
                     serverIp
                   )}
                 </div>
-                <p className="text-xs text-orange-100/80">
+                <p className="text-xs text-slate-600 dark:text-slate-300">
                   Point your domain&apos;s A record to this IP address to bring the site online.
                 </p>
               </div>
@@ -166,25 +166,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {[
-          { label: 'Live stats', value: 'Socket stream', icon: Activity },
-          { label: 'Domain status', value: 'Managed centrally', icon: Globe2 },
-          { label: 'System posture', value: 'Active monitoring', icon: ShieldCheck }
-        ].map((item) => (
-          <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-lava-500/15 text-lava-300">
-                <item.icon className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-gray-500">{item.label}</p>
-                <p className="mt-1 text-sm font-semibold text-white">{item.value}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      
 
       {/* System Metrics (Graphs in Hero Section) */}
       <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#1a120f]/40 via-[#151515]/40 to-[#090909]/40 p-6 backdrop-blur-sm shadow-2xl shadow-black/20">

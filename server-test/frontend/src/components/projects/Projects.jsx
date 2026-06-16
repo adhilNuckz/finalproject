@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 import {
   FolderGit2, Plus, RefreshCw, Trash2, GitBranch, GitCommit,
   ArrowDownToLine, ArrowUpFromLine, Globe, Activity, FolderOpen, ChevronRight,
@@ -33,6 +34,16 @@ async function resolveTerminalUrl() {
       return url.toString();
     }
 
+    function getTerminalTheme(theme) {
+      const isDark = theme === 'dark';
+      return {
+        background: isDark ? '#0f172a' : '#f8fafc',
+        foreground: isDark ? '#e2e8f0' : '#0f172a',
+        cursor: isDark ? '#fb923c' : '#f97316',
+        selectionBackground: isDark ? '#334155' : '#cbd5e1',
+      };
+    }
+
     const res = await fetch(`${API_URL}/server/ip`);
     const data = await res.json();
     if (data?.success && data?.ip) {
@@ -65,6 +76,7 @@ export default function Projects() {
   const [githubLoading, setGithubLoading] = useState(false);
   const [githubError, setGithubError] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
+  const [deployLoading, setDeployLoading] = useState({});
 
   useEffect(() => {
     fetchProjects();
@@ -218,6 +230,31 @@ export default function Projects() {
     if (!commitMessage.trim()) return alert('Commit message is required');
     await gitAction(projectId, 'commit', { message: commitMessage });
     setCommitMessage('');
+  };
+
+  const deployProject = async (projectId, scope = 'both') => {
+    const key = `deploy-${scope}-${projectId}`;
+    setDeployLoading(prev => ({ ...prev, [key]: true }));
+    setActionOutput('');
+    try {
+      const res = await fetch(`${API_URL}/projects/${projectId}/deploy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActionOutput(data.output || 'Deploy completed');
+        fetchGitStatus(projectId);
+        fetchProjects();
+      } else {
+        setActionOutput(`Error: ${data.error}`);
+      }
+    } catch (e) {
+      setActionOutput(`Error: ${e.message}`);
+    } finally {
+      setDeployLoading(prev => ({ ...prev, [key]: false }));
+    }
   };
 
   // ==================== Panel Toggles ====================
@@ -381,6 +418,21 @@ export default function Projects() {
                           )}
                         </span>
                       )}
+                      {project.git && !project.git.error && (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                          project.git.repoState === 'remote-updated'
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                            : project.git.repoState === 'local-ahead'
+                              ? 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+                              : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        }`}>
+                          {project.git.repoState === 'remote-updated'
+                            ? `${project.git.behind || 0} recent push${(project.git.behind || 0) === 1 ? '' : 'es'} available`
+                            : project.git.repoState === 'local-ahead'
+                              ? `${project.git.ahead || 0} local commit${(project.git.ahead || 0) === 1 ? '' : 's'} not pushed`
+                              : 'Repo synced'}
+                        </span>
+                      )}
                     </div>
 
                     {/* PM2 Stats Row */}
@@ -433,6 +485,15 @@ export default function Projects() {
                         title="Git Operations"
                       >
                         <GitBranch className="w-4 h-4" />
+                      </button>
+                    )}
+                    {project.git !== null && (
+                      <button
+                        onClick={() => setSelectedProject(project)}
+                        className="p-2 rounded-lg text-sm bg-[#1a1a1a] text-gray-400 hover:bg-[#1f1f1f] transition"
+                        title="Open project details"
+                      >
+                        <Eye className="w-4 h-4" />
                       </button>
                     )}
                     {project.git === null && (
@@ -495,6 +556,10 @@ export default function Projects() {
                   onPush={() => gitAction(project.id, 'push')}
                   onCommit={() => gitCommit(project.id)}
                   onRefresh={() => fetchGitStatus(project.id)}
+                  onDeployFrontend={() => deployProject(project.id, 'frontend')}
+                  onDeployBackend={() => deployProject(project.id, 'backend')}
+                  onDeployBoth={() => deployProject(project.id, 'both')}
+                  deployLoading={deployLoading}
                 />
               )}
             </div>
@@ -850,11 +915,18 @@ function CodePanelComponent({ project }) {
 // ==================== Terminal Panel Component ====================
 
 function TerminalPanelComponent({ project }) {
+  const { theme } = useTheme();
   const termRef = useRef(null);
   const socketRef = useRef(null);
   const termInstance = useRef(null);
   const fitAddonRef = useRef(null);
   const sessionId = useRef(`proj-${project.id}-${Date.now()}`);
+
+  useEffect(() => {
+    if (termInstance.current) {
+      termInstance.current.options.theme = getTerminalTheme(theme);
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!termRef.current) return;
@@ -865,10 +937,7 @@ function TerminalPanelComponent({ project }) {
       fontFamily: 'monospace',
       fontSize: 13,
       cursorBlink: true,
-      theme: {
-        background: '#0a0a0a',
-        foreground: '#00ff66',
-      },
+      theme: getTerminalTheme(theme),
       scrollback: 1000,
     });
 
@@ -928,16 +997,22 @@ function TerminalPanelComponent({ project }) {
   }, []);
 
   return (
-    <div className="border-t border-[#1f1f1f]">
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-900">
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <TerminalSquare className="w-3.5 h-3.5 text-green-500" />
+    <div className="border-t border-[#1f1f1f] dark:border-slate-800">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-100 dark:bg-slate-900">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400">
+          <TerminalSquare className="w-3.5 h-3.5 text-green-500 dark:text-emerald-400" />
           <span>Terminal</span>
-          <span className="text-gray-600">—</span>
-          <span className="text-green-500 font-mono">{project.path}</span>
+          <span className="text-gray-600 dark:text-slate-600">—</span>
+          <span className="text-green-600 dark:text-emerald-400 font-mono">{project.path}</span>
         </div>
       </div>
-      <div ref={termRef} style={{ height: '300px', background: '#0a0a0a' }} />
+      <div
+        ref={termRef}
+        style={{
+          height: '300px',
+          background: theme === 'dark' ? '#0f172a' : '#f8fafc',
+        }}
+      />
     </div>
   );
 }
@@ -947,7 +1022,8 @@ function TerminalPanelComponent({ project }) {
 
 function GitPanelComponent({
   project, gitStatus, gitLoading, actionLoading, actionOutput,
-  commitMessage, setCommitMessage, onPull, onPush, onCommit, onRefresh
+  commitMessage, setCommitMessage, onPull, onPush, onCommit, onRefresh,
+  onDeployFrontend, onDeployBackend, onDeployBoth, deployLoading
 }) {
   if (gitLoading) {
     return (
@@ -978,6 +1054,11 @@ function GitPanelComponent({
             <span className="text-xs text-gray-400">
               {gitStatus.changedFiles.length} changed file{gitStatus.changedFiles.length !== 1 ? 's' : ''}
             </span>
+            {typeof gitStatus.behind === 'number' && gitStatus.behind > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/30 text-amber-400">
+                {gitStatus.behind} recent push{gitStatus.behind !== 1 ? 'es' : ''} available
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -1003,7 +1084,34 @@ function GitPanelComponent({
               {actionLoading[`git-push-${project.id}`] ? <Loader className="w-3 h-3 animate-spin" /> : <ArrowUpFromLine className="w-3 h-3" />}
               Push
             </button>
+            <button
+              onClick={onDeployBoth}
+              disabled={deployLoading?.[`deploy-both-${project.id}`]}
+              className="px-3 py-1.5 text-xs rounded-lg bg-green-600 text-white hover:bg-green-700 transition flex items-center gap-1 disabled:opacity-50"
+            >
+              {deployLoading?.[`deploy-both-${project.id}`] ? <Loader className="w-3 h-3 animate-spin" /> : <RotateCw className="w-3 h-3" />}
+              Redeploy All
+            </button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={onDeployBackend}
+            disabled={deployLoading?.[`deploy-backend-${project.id}`]}
+            className="px-3 py-1.5 text-xs rounded-lg bg-[#1a1a1a] text-gray-300 hover:bg-[#1f1f1f] transition flex items-center gap-1 disabled:opacity-50"
+          >
+            {deployLoading?.[`deploy-backend-${project.id}`] ? <Loader className="w-3 h-3 animate-spin" /> : <Server className="w-3 h-3" />}
+            Redeploy Backend
+          </button>
+          <button
+            onClick={onDeployFrontend}
+            disabled={deployLoading?.[`deploy-frontend-${project.id}`]}
+            className="px-3 py-1.5 text-xs rounded-lg bg-[#1a1a1a] text-gray-300 hover:bg-[#1f1f1f] transition flex items-center gap-1 disabled:opacity-50"
+          >
+            {deployLoading?.[`deploy-frontend-${project.id}`] ? <Loader className="w-3 h-3 animate-spin" /> : <FolderOpen className="w-3 h-3" />}
+            Redeploy Frontend
+          </button>
         </div>
 
         {/* Changed Files */}
